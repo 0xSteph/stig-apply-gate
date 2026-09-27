@@ -1,0 +1,152 @@
+{
+  "as_of": "2026-09-27",
+  "isolated": true,
+  "handoff_ready": false,
+  "stories": [
+    {
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "control": "RHEL-08-010370",
+      "action": "probe",
+      "label": "Check first",
+      "reason": "The lab signing key is written down in the build notes and is not imported here. gpgcheck=1 before that key exists stops every install from this repo.",
+      "point": "Oldest CAT I. The signing key has to be on the box before gpgcheck."
+    },
+    {
+      "host": "wsus01.lab.local",
+      "host_short": "wsus01",
+      "control": "WN22-00-000380",
+      "action": "refuse",
+      "label": "Stopped",
+      "reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days.",
+      "point": "SMBv1 wants a reboot. The backup is outside policy, so the play stops."
+    },
+    {
+      "host": "ad01.lab.local",
+      "host_short": "ad01",
+      "control": "WN22-DC-000060",
+      "action": "refuse",
+      "label": "Stopped",
+      "reason": "ad01 and esxi01 take time from each other. Fixing either side leaves the loop in place.",
+      "point": "The domain controller and ESXi take time from each other."
+    },
+    {
+      "host": "esxi01.lab.local",
+      "host_short": "esxi01",
+      "control": "ESXI-80-000124",
+      "action": "refuse",
+      "label": "Stopped",
+      "reason": "esxi01 and ad01 take time from each other. Fixing either side leaves the loop in place.",
+      "point": "Pointing ESXi at the domain controller keeps that loop."
+    },
+    {
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "control": "RHEL-08-010550",
+      "action": "bundle",
+      "label": "One restart",
+      "reason": "These open rows restart sshd together: RHEL-08-010550, CVE-2024-6387, CVE-2023-48795. Doing one of them restarts the service before the others land.",
+      "point": "OpenSSH, PermitRootLogin, and the audit package share one sshd restart."
+    }
+  ],
+  "cases": [
+    {
+      "id": "wsus-backup",
+      "title": "WSUS backup back inside policy",
+      "change": "On the copy only, the WSUS last good backup is 27 Sep 2026 02:00 UTC and the restore test is 1 Sep 2026. Both the RPO and the restore-test window have to be inside policy. Moving only the backup age leaves the stop in place.",
+      "meaning": "The backup stop lifts. The row does not become an unattended apply. SMBv1 still wants a reboot, so someone has to be at the console. That is the maintenance window.",
+      "rows": [
+        {
+          "host": "wsus01.lab.local",
+          "host_short": "wsus01",
+          "control": "WN22-00-000380",
+          "before_action": "refuse",
+          "before_label": "Stopped",
+          "before_reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days.",
+          "after_action": "window",
+          "after_label": "Someone there",
+          "after_reason": "This restarts a service or wants a reboot. An unattended run will not touch it. Someone has to be at the console."
+        }
+      ]
+    },
+    {
+      "id": "exception-lapsed",
+      "title": "ESXi SSH exception dated yesterday",
+      "change": "On the copy only, EX-014 expires on 26 Sep 2026, the day before the sample clock.",
+      "meaning": "The signature stop lifts. The row stays stopped, because closing SSH from a playbook still removes the break-glass path. An expired signature is not permission to automate the STIG.",
+      "rows": [
+        {
+          "host": "esxi01.lab.local",
+          "host_short": "esxi01",
+          "control": "ESXI-80-000193",
+          "before_action": "refuse",
+          "before_label": "Stopped",
+          "before_reason": "EX-014 is signed through 2026-10-15. Closing this from a playbook would pass the scan and break that signature.",
+          "after_action": "refuse",
+          "after_label": "Stopped",
+          "after_reason": "An approved exception is not a failure you quietly close. Stopping SSH from a playbook would violate the exception and remove the path the change record depends on."
+        }
+      ]
+    },
+    {
+      "id": "signing-key",
+      "title": "Lab signing key imported",
+      "change": "On the copy only, the predecessor check rpm -q gpg-pubkey is marked met on the repository host.",
+      "meaning": "The GPG rows become safe to apply on the lab host. Run them with --check --diff before a real run. The mission host is a different row.",
+      "rows": [
+        {
+          "host": "rhel-repo01.lab.local",
+          "host_short": "rhel-repo01",
+          "control": "RHEL-08-010370",
+          "before_action": "probe",
+          "before_label": "Check first",
+          "before_reason": "The lab signing key is written down in the build notes and is not imported here. gpgcheck=1 before that key exists stops every install from this repo.",
+          "after_action": "allow",
+          "after_label": "Apply",
+          "after_reason": "No signature, dependency, or predecessor blocks this edit."
+        },
+        {
+          "host": "rhel-repo01.lab.local",
+          "host_short": "rhel-repo01",
+          "control": "RHEL-08-010371",
+          "before_action": "probe",
+          "before_label": "Check first",
+          "before_reason": "localpkg_gpgcheck fails closed the same way when the signing key was never imported.",
+          "after_action": "allow",
+          "after_label": "Apply",
+          "after_reason": "No signature, dependency, or predecessor blocks this edit."
+        }
+      ]
+    },
+    {
+      "id": "operations-hold",
+      "title": "Same key, host marked operations",
+      "change": "On the copy only, the signing key is met and the repository host is marked production. The lab twin of this change is the signing-key case, which allows the edit.",
+      "meaning": "The same change the lab would allow is refused on an operations host. Prove it in the lab, then schedule the window.",
+      "rows": [
+        {
+          "host": "rhel-repo01.lab.local",
+          "host_short": "rhel-repo01",
+          "control": "RHEL-08-010370",
+          "before_action": "probe",
+          "before_label": "Check first",
+          "before_reason": "The lab signing key is written down in the build notes and is not imported here. gpgcheck=1 before that key exists stops every install from this repo.",
+          "after_action": "refuse",
+          "after_label": "Stopped",
+          "after_reason": "This host is in operations. Prove the change in the integration lab first. A maintenance window is the scheduled time to apply that proven change, with someone at the console and a rollback. It is not the time you find out whether the change is safe."
+        },
+        {
+          "host": "rhel-repo01.lab.local",
+          "host_short": "rhel-repo01",
+          "control": "RHEL-08-010371",
+          "before_action": "probe",
+          "before_label": "Check first",
+          "before_reason": "localpkg_gpgcheck fails closed the same way when the signing key was never imported.",
+          "after_action": "refuse",
+          "after_label": "Stopped",
+          "after_reason": "This host is in operations. Prove the change in the integration lab first. A maintenance window is the scheduled time to apply that proven change, with someone at the console and a rollback. It is not the time you find out whether the change is safe."
+        }
+      ]
+    }
+  ]
+}

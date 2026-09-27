@@ -20,6 +20,16 @@ cd web && npm install && npm run dev -- --port 43123 --hostname 0.0.0.0
 
 The sample clock is pinned to 27 Sep 2026 so the overdue rows stay overdue when someone clones the repo later. Pass `--today` to move it.
 
+Try a change without touching that record:
+
+```bash
+python3 -m findings rehearse
+```
+
+That copies the lab inputs, moves one fact at a time, and writes `dist/window/report.md`. It does not write `fixtures/lab`, `web/src/data/ledger.json`, or `ansible/generated/apply-gate.json`. `dist/` is gitignored. Pass `--publish` when the Test window page should match the run you just made.
+
+The four cases are the WSUS backup brought back inside policy, the ESXi SSH exception dated yesterday, the lab signing key marked imported, and that same key with the repository host marked operations. The operations case stays refused. The playbook inventory is the lab, and a host with `findings_tier=production` fails before any file is copied. A maintenance window is the scheduled time to apply a change the lab already proved, with someone at the console and a rollback.
+
 Open the overview and read the note for the ISSO before the tables. The handoff page is red on purpose.
 
 ## Use your own exports

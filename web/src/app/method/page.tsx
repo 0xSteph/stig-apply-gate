@@ -102,6 +102,27 @@ export default function MethodPage() {
         </section>
 
         <section className="space-y-4">
+          <h2 className="font-heading text-2xl">The test window</h2>
+          <p>
+            The lab record is what you walk in an interview. Trying a change by editing those files would replace that
+            record. <span className="font-mono text-sm">python -m findings rehearse</span> copies the records, moves
+            one fact, and writes the comparison under <span className="font-mono text-sm">dist/window</span>. That
+            directory is gitignored. The command refuses to write the ledger, the apply-gate file, or anything under{" "}
+            <span className="font-mono text-sm">fixtures/lab</span>.
+          </p>
+          <ul className="list-disc space-y-2 pl-5">
+            <li>WSUS backup and restore test back inside policy. The reboot stop stays until someone is at the console.</li>
+            <li>EX-014 dated yesterday. The signature stop lifts. Closing SSH from a playbook stays refused.</li>
+            <li>Signing key marked imported. The repository GPG rows become safe to apply, on the lab host, after a dry run.</li>
+            <li>That same key, with the repository host marked operations. The edit the lab would allow is refused.</li>
+          </ul>
+          <p>
+            Moving only the backup age, and leaving the restore test stale, does not lift the WSUS stop. Both have to
+            be inside policy. A maintenance window on an operations host comes after the lab has proved the change.
+          </p>
+        </section>
+
+        <section className="space-y-4">
           <h2 className="font-heading text-2xl">What the sample is arguing</h2>
           <ul className="list-disc space-y-2 pl-5">
             <li>The oldest CAT I is a repository GPG check. It is safe to automate, and it fails closed if the key was never imported.</li>

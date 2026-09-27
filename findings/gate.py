@@ -11,6 +11,14 @@ from datetime import date
 
 from findings.models import PASS_RESULTS
 
+# A maintenance window is when a change the lab already proved gets applied,
+# with someone present and a way back. It is not where you find out if it is safe.
+OPERATIONS_REASON = (
+    "This host is in operations. Prove the change in the integration lab first. "
+    "A maintenance window is the scheduled time to apply that proven change, with someone at the console and a rollback. "
+    "It is not the time you find out whether the change is safe."
+)
+
 # Tags the sample play and the Windows script actually implement.
 TAGS = {
     "RHEL-08-010370": "gpgcheck",
@@ -46,6 +54,7 @@ def build_apply_gate(
     index = {(item["host"].lower(), item["control"]): item for item in findings}
     loops = _loops(duties)
     backup_by_host = {item["host"].lower(): item for item in backups}
+    host_tier = {item["hostname"].lower(): item.get("tier", "lab") for item in hosts}
     decisions = []
     for finding in findings:
         decision = _decision(
@@ -55,6 +64,7 @@ def build_apply_gate(
             backup_by_host=backup_by_host,
             duties=duties,
             today=today,
+            tier=host_tier.get(finding["host"].lower(), "lab"),
         )
         if decision:
             decisions.append(decision)
@@ -67,12 +77,14 @@ def build_apply_gate(
     return {"decisions": decisions, "unscanned": unscanned, "counts": counts}
 
 
-def _decision(*, finding, index, loops, backup_by_host, duties, today: date) -> dict | None:
+def _decision(*, finding, index, loops, backup_by_host, duties, today: date, tier: str = "lab") -> dict | None:
     hollow = _hollow(finding, index, duties)
     if finding["clock"] == "closed" and not hollow:
         return None
 
     candidates: list[tuple[int, str, str]] = []
+    if tier == "production":
+        candidates.append((0, "refuse", OPERATIONS_REASON))
     if hollow:
         candidates.append((1, "hollow", hollow))
 

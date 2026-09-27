@@ -3,6 +3,7 @@
 #   ansible-playbook -i ansible/inventory/lab.ini ansible/site.yml --check --diff --limit rhel-repo01.lab.local --tags pwquality
 # gpgcheck on the repo host runs `rpm -q gpg-pubkey` even under --check, and stops if no key is imported.
 # A service restart needs -e findings_one_window=true and someone at the console.
+# This inventory is the lab. python -m findings rehearse tries a change on a copy and does not write the gate file this play reads.
 # Put the saved files back (does not restart sshd):
 #   ansible-playbook -i ansible/inventory/lab.ini ansible/revert.yml --limit rhel-repo01.lab.local
 - name: RHEL controls marked safe to automate
@@ -10,5 +11,16 @@
   become: true
   vars:
     findings_gate_file: "{{ playbook_dir }}/generated/apply-gate.json"
+  pre_tasks:
+    - name: Stay inside the integration lab
+      ansible.builtin.assert:
+        that:
+          - (findings_tier | default('lab')) != 'production'
+          - inventory_hostname is match('.*\\.lab\\.local$')
+        fail_msg: >-
+          {{ inventory_hostname }} is outside the integration lab.
+          Prove the change here before a maintenance window.
+          This play does not change operations hosts.
+      tags: [always]
   roles:
     - rhel_baseline

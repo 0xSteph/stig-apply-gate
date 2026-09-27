@@ -11,6 +11,7 @@ const links = [
   { href: "/exceptions", label: "Exceptions" },
   { href: "/backups", label: "Backups" },
   { href: "/handoff", label: "Handoff" },
+  { href: "/window", label: "Test window" },
   { href: "/method", label: "How this works" },
 ];
 

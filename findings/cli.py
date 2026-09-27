@@ -44,6 +44,20 @@ def main(argv: list[str] | None = None) -> int:
     evidence.add_argument("--ledger", required=True)
     evidence.add_argument("--out", required=True)
 
+    rehearse = sub.add_parser(
+        "rehearse",
+        help="Try gate changes on a copy. Does not write the lab record or the playbook gate.",
+    )
+    rehearse.add_argument("--today", default="2026-09-27")
+    rehearse.add_argument("--lab", default="fixtures/lab")
+    rehearse.add_argument("--scenario", default="all", choices=["all", "wsus-backup", "exception-lapsed", "signing-key", "operations-hold"])
+    rehearse.add_argument("--out", default="dist/window")
+    rehearse.add_argument(
+        "--publish",
+        action="store_true",
+        help="Also write web/src/data/window.json so the Test window page matches this run.",
+    )
+
     args = parser.parse_args(argv)
     if args.command == "demo":
         return _demo(args)
@@ -53,6 +67,8 @@ def main(argv: list[str] | None = None) -> int:
         ledger = json.loads(Path(args.ledger).read_text(encoding="utf-8"))
         write_evidence(ledger, Path(args.out))
         return 0
+    if args.command == "rehearse":
+        return _rehearse(args)
     return 1
 
 
@@ -112,6 +128,48 @@ def _ingest(args: argparse.Namespace) -> int:
         _write_gate(ledger, Path(args.gate))
     print(f"wrote {out}")
     return 0
+
+
+# The lab record and the file the playbook reads. A rehearsal must not replace these.
+PROTECTED_OUTPUTS = (
+    Path("web/src/data/ledger.json"),
+    Path("ansible/generated/apply-gate.json"),
+    Path("ansible/generated/lab-plan.yml"),
+)
+
+
+def _rehearse(args: argparse.Namespace) -> int:
+    from findings.window import publishable, rehearse, render_report
+
+    out = Path(args.out)
+    blocked = _blocked_output(out)
+    if blocked:
+        print(f"Refusing to write {out}. That path is the lab record the interview walks.", file=sys.stderr)
+        return 2
+    report = rehearse(Path(args.lab), today=parse_day(args.today), scenario=args.scenario)
+    out.mkdir(parents=True, exist_ok=True)
+    text = render_report(report)
+    (out / "report.md").write_text(text, encoding="utf-8")
+    (out / "report.json").write_text(json.dumps(publishable(report), indent=2) + "\n", encoding="utf-8")
+    if args.publish:
+        published = Path("web/src/data/window.json")
+        published.parent.mkdir(parents=True, exist_ok=True)
+        published.write_text(json.dumps(publishable(report), indent=2) + "\n", encoding="utf-8")
+        print(f"wrote {published}")
+    print(text, end="")
+    print(f"wrote {out / 'report.md'}")
+    return 0
+
+
+def _blocked_output(path: Path) -> bool:
+    resolved = path.resolve()
+    lab = Path("fixtures/lab").resolve()
+    if resolved == lab or lab in resolved.parents:
+        return True
+    for protected in PROTECTED_OUTPUTS:
+        if resolved == protected.resolve():
+            return True
+    return False
 
 
 def _ledger_from_dir(*, scan_dir: Path, hosts, exceptions, backups, services, site, milestones, duties, policy_path: Path, today: date) -> dict:
