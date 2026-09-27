@@ -1,0 +1,179 @@
+---
+# The apply gate is loaded before any copy. A refused control stops the play
+# before a backup directory is created, so a blocked run leaves the host untouched.
+- name: Load the apply gate
+  ansible.builtin.include_vars:
+    file: "{{ findings_gate_file }}"
+    name: findings_gate
+  tags: [always]
+
+- name: Stop when the gate refuses this host
+  ansible.builtin.fail:
+    msg: "{{ item.control }}: {{ item.reason }}"
+  loop: "{{ findings_gate.decisions }}"
+  loop_control:
+    label: "{{ item.control }}"
+  when:
+    - item.host == inventory_hostname
+    - item.action == "refuse"
+    - item.tag | default('') | length > 0
+    - ('all' in ansible_run_tags) or (item.tag in ansible_run_tags)
+  tags: [always]
+
+- name: Stop a partial service restart
+  ansible.builtin.fail:
+    msg: "{{ item.control }}: {{ item.reason }} Set findings_one_window=true only when the whole bundle lands before the restart."
+  loop: "{{ findings_gate.decisions }}"
+  loop_control:
+    label: "{{ item.control }}"
+  when:
+    - item.host == inventory_hostname
+    - item.action == "bundle"
+    - not (findings_one_window | default(false) | bool)
+    - ('all' in ansible_run_tags) or (item.tag in ansible_run_tags)
+  tags: [always]
+
+- name: Stop a restart that nobody is attending
+  ansible.builtin.fail:
+    msg: "{{ item.control }}: {{ item.reason }}"
+  loop: "{{ findings_gate.decisions }}"
+  loop_control:
+    label: "{{ item.control }}"
+  when:
+    - item.host == inventory_hostname
+    - item.action == "window"
+    - not (findings_one_window | default(false) | bool)
+    - ('all' in ansible_run_tags) or (item.tag in ansible_run_tags)
+  tags: [always]
+
+- name: Run a predecessor check before the edit
+  ansible.builtin.command: "{{ item.probe }}"
+  changed_when: false
+  check_mode: false
+  loop: "{{ findings_gate.decisions }}"
+  loop_control:
+    label: "{{ item.control }}"
+  when:
+    - item.host == inventory_hostname
+    - item.action == "probe"
+    - item.probe | default('') | length > 0
+    - ('all' in ansible_run_tags) or (item.tag in ansible_run_tags)
+  tags: [always]
+
+# Copies the files this role edits into /var/backups/findings-register/<timestamp>/
+# and records that path in latest-path.txt. ansible/revert.yml reads it back.
+# These tasks use modules that support check mode, so --check does not write the copy.
+- name: Choose a backup directory for this run
+  ansible.builtin.set_fact:
+    baseline_backup_dir: "/var/backups/findings-register/{{ ansible_date_time.iso8601_basic_short }}"
+  tags: [always]
+
+- name: Create the backup directory
+  ansible.builtin.file:
+    path: "{{ baseline_backup_dir }}"
+    state: directory
+    mode: "0700"
+  tags: [always]
+
+- name: Find repository files to save
+  ansible.builtin.find:
+    paths: /etc/yum.repos.d
+    patterns: "*.repo"
+  register: saved_repo_files
+  tags: [always]
+
+- name: Save repository files
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "{{ baseline_backup_dir }}/"
+    remote_src: true
+  loop: "{{ saved_repo_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  tags: [always]
+
+- name: Check config files that later tasks may edit
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - /etc/dnf/dnf.conf
+    - /etc/security/pwquality.conf
+    - /etc/ssh/sshd_config
+  register: config_stats
+  tags: [always]
+
+- name: Save config files that already exist
+  ansible.builtin.copy:
+    src: "{{ item.stat.path }}"
+    dest: "{{ baseline_backup_dir }}/"
+    remote_src: true
+  loop: "{{ config_stats.results }}"
+  when: item.stat.exists
+  loop_control:
+    label: "{{ item.stat.path | default(item.item) }}"
+  tags: [always]
+
+- name: Remember which files existed
+  ansible.builtin.set_fact:
+    baseline_manifest:
+      present: "{{ (config_stats.results | selectattr('stat.exists') | map(attribute='stat.path') | list) + (saved_repo_files.files | map(attribute='path') | list) }}"
+      absent: "{{ config_stats.results | rejectattr('stat.exists') | map(attribute='item') | list }}"
+  tags: [always]
+
+- name: Write the backup manifest
+  ansible.builtin.copy:
+    dest: "{{ baseline_backup_dir }}/manifest.json"
+    mode: "0600"
+    content: "{{ baseline_manifest | to_nice_json }}\n"
+  tags: [always]
+
+- name: Record this backup as the latest
+  ansible.builtin.copy:
+    dest: /var/backups/findings-register/latest-path.txt
+    mode: "0600"
+    content: "{{ baseline_backup_dir }}\n"
+  tags: [always]
+
+- name: Find repo definition files
+  ansible.builtin.find:
+    paths: /etc/yum.repos.d
+    patterns: "*.repo"
+  register: repo_files
+  tags: [gpgcheck, automate]
+
+- name: Require GPG checks on repo files
+  ansible.builtin.replace:
+    path: "{{ item.path }}"
+    regexp: '^(\s*)gpgcheck\s*=\s*\S+'
+    replace: '\1gpgcheck=1'
+  loop: "{{ repo_files.files }}"
+  tags: [gpgcheck, automate]
+
+- name: Check local packages before install
+  ansible.builtin.lineinfile:
+    path: /etc/dnf/dnf.conf
+    regexp: '^localpkg_gpgcheck\\s*='
+    line: localpkg_gpgcheck=True
+  tags: [localpkg, automate]
+
+- name: Require 15 character passwords on the next change
+  ansible.builtin.lineinfile:
+    path: /etc/security/pwquality.conf
+    regexp: '^#?\\s*minlen\\s*='
+    line: minlen = {{ baseline_minlen }}
+  tags: [pwquality, automate]
+
+- name: Refuse direct SSH logons as root
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?\\s*PermitRootLogin\\s+'
+    line: "PermitRootLogin {{ permit_root_login }}"
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Restart sshd after a root-login change
+  tags: [ssh-root, change-window]
+
+- name: Install the audit package
+  ansible.builtin.package:
+    name: audit
+    state: present
+  tags: [audit, change-window]

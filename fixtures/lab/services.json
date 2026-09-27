@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Active Directory",
+    "host": "ad01.lab.local",
+    "runbook": "docs/runbooks/active-directory.md"
+  },
+  {
+    "name": "DNS",
+    "host": "ad01.lab.local",
+    "runbook": "docs/runbooks/dns.md"
+  },
+  {
+    "name": "DHCP",
+    "host": "ad01.lab.local",
+    "runbook": null
+  },
+  {
+    "name": "WSUS",
+    "host": "wsus01.lab.local",
+    "runbook": "docs/runbooks/wsus.md"
+  },
+  {
+    "name": "DNF repository",
+    "host": "rhel-repo01.lab.local",
+    "runbook": "docs/runbooks/repository.md"
+  },
+  {
+    "name": "vCenter",
+    "host": "vcenter01.lab.local",
+    "runbook": null
+  }
+]

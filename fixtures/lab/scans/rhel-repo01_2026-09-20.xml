@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Benchmark xmlns="http://checklists.nist.gov/xccdf/1.2" id="xccdf_lab_benchmark">
+  <title>Red Hat Enterprise Linux 8 STIG</title>
+  <Group id="xccdf_lab_group_V-230264">
+    <Rule id="xccdf_mil.disa.stig_rule_SV-230264r880711_rule" severity="high">
+      <version>RHEL-08-010370</version>
+      <title>Repository packages must be GPG-checked before they are installed.</title>
+      <ident system="http://cyber.mil/cci">CCI-001749</ident>
+      <ident system="http://cyber.mil/legacy">V-230264</ident>
+      <ident system="http://cyber.mil/nist">CM-5</ident>
+    </Rule>
+  </Group>
+  <Group id="xccdf_lab_group_V-230265">
+    <Rule id="xccdf_mil.disa.stig_rule_SV-230265r877463_rule" severity="high">
+      <version>RHEL-08-010371</version>
+      <title>Local packages must be GPG-checked before they are installed.</title>
+      <ident system="http://cyber.mil/cci">CCI-001749</ident>
+      <ident system="http://cyber.mil/legacy">V-230265</ident>
+      <ident system="http://cyber.mil/nist">CM-5</ident>
+    </Rule>
+  </Group>
+  <Group id="xccdf_lab_group_V-230296">
+    <Rule id="xccdf_mil.disa.stig_rule_SV-230296r858711_rule" severity="medium">
+      <version>RHEL-08-010550</version>
+      <title>Direct SSH logons as root must be disabled.</title>
+      <ident system="http://cyber.mil/cci">CCI-000770</ident>
+      <ident system="http://cyber.mil/legacy">V-230296</ident>
+      <ident system="http://cyber.mil/nist">IA-2</ident>
+    </Rule>
+  </Group>
+  <Group id="xccdf_lab_group_V-230369">
+    <Rule id="xccdf_mil.disa.stig_rule_SV-230369r858785_rule" severity="medium">
+      <version>RHEL-08-020230</version>
+      <title>Passwords must be at least 15 characters.</title>
+      <ident system="http://cyber.mil/cci">CCI-000205</ident>
+      <ident system="http://cyber.mil/legacy">V-230369</ident>
+      <ident system="http://cyber.mil/nist">IA-5</ident>
+    </Rule>
+  </Group>
+  <Group id="xccdf_lab_group_V-230411">
+    <Rule id="xccdf_mil.disa.stig_rule_SV-230411r744000_rule" severity="medium">
+      <version>RHEL-08-030180</version>
+      <title>The audit package must be installed.</title>
+      <ident system="http://cyber.mil/cci">CCI-000169</ident>
+      <ident system="http://cyber.mil/legacy">V-230411</ident>
+      <ident system="http://cyber.mil/nist">AU-12</ident>
+    </Rule>
+  </Group>
+  <TestResult id="xccdf_lab_testresult_2026-09-20" start-time="2026-09-20T02:10:00">
+    <target>rhel-repo01.lab.local</target>
+    <rule-result idref="xccdf_mil.disa.stig_rule_SV-230264r880711_rule" severity="high">
+      <result>fail</result>
+      <message>Key is in the build notes. It was never imported on this host.</message>
+    </rule-result>
+    <rule-result idref="xccdf_mil.disa.stig_rule_SV-230265r877463_rule" severity="high">
+      <result>fail</result>
+    </rule-result>
+    <rule-result idref="xccdf_mil.disa.stig_rule_SV-230296r858711_rule" severity="medium">
+      <result>pass</result>
+      <message>Closed during the repo host window. sshd restarted from the console.</message>
+    </rule-result>
+    <rule-result idref="xccdf_mil.disa.stig_rule_SV-230369r858785_rule" severity="medium">
+      <result>fail</result>
+      <message>minlen is still 8.</message>
+    </rule-result>
+    <rule-result idref="xccdf_mil.disa.stig_rule_SV-230411r744000_rule" severity="medium">
+      <result>pass</result>
+    </rule-result>
+  </TestResult>
+</Benchmark>

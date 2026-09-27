@@ -1,0 +1,5 @@
+---
+- name: Restart sshd after a root-login change
+  ansible.builtin.service:
+    name: sshd
+    state: restarted

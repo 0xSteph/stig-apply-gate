@@ -1,0 +1,56 @@
+[
+  {
+    "hostname": "ad01.lab.local",
+    "platform": "windows2022",
+    "role": "Domain controller, DNS, DHCP",
+    "owner": "IT Engineering",
+    "environment": "Integration Lab",
+    "address": "10.8.1.10",
+    "window_note": "This is the only domain controller. Do not reboot it in the same window as WSUS, and do not change Kerberos clock tolerance until ESXi time is fixed."
+  },
+  {
+    "hostname": "wsus01.lab.local",
+    "platform": "windows2022",
+    "role": "WSUS and patch repository",
+    "owner": "IT Engineering",
+    "environment": "Integration Lab",
+    "address": "10.8.1.11",
+    "window_note": "SMBv1 removal wants a reboot. Take the backup failure on this host first so you are not uninstalling features on a box you cannot restore."
+  },
+  {
+    "hostname": "rhel-repo01.lab.local",
+    "platform": "rhel8",
+    "role": "DNF repository and Ansible controller",
+    "owner": "IT Engineering",
+    "environment": "Integration Lab",
+    "address": "10.8.1.20",
+    "window_note": "Import the lab GPG key, then set gpgcheck and localpkg_gpgcheck. Password length does not need a reboot. SSH root is already closed here."
+  },
+  {
+    "hostname": "rhel-mission01.lab.local",
+    "platform": "rhel8",
+    "role": "Mission processing",
+    "owner": "IT Engineering",
+    "environment": "Integration Lab",
+    "address": "10.8.1.21",
+    "window_note": "iDRAC is on the bench. Update OpenSSH, install audit, and set PermitRootLogin, then restart sshd once with someone at the console."
+  },
+  {
+    "hostname": "esxi01.lab.local",
+    "platform": "esxi8",
+    "role": "Hypervisor",
+    "owner": "IT Engineering",
+    "environment": "Integration Lab",
+    "address": "10.8.1.30",
+    "window_note": "Fix NTP with two sources that do not sync from this host. Leave SSH alone until EX-014 expires. Do not invent a syslog target."
+  },
+  {
+    "hostname": "vcenter01.lab.local",
+    "platform": "vcenter",
+    "role": "vCenter Server",
+    "owner": "IT Engineering",
+    "environment": "Integration Lab",
+    "address": "10.8.1.31",
+    "window_note": "No open vCenter findings in this sample. The host is here because lockdown and the handoff both depend on it."
+  }
+]

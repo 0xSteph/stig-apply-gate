@@ -1,0 +1,46 @@
+{
+  "time_sources": [
+    {
+      "host": "ad01.lab.local",
+      "peers": ["esxi01.lab.local"],
+      "controls": ["WN22-DC-000060"]
+    },
+    {
+      "host": "esxi01.lab.local",
+      "peers": ["ad01.lab.local"],
+      "controls": ["ESXI-80-000124"]
+    }
+  ],
+  "predecessors": [
+    {
+      "host": "rhel-repo01.lab.local",
+      "control": "RHEL-08-010370",
+      "probe": "rpm -q gpg-pubkey",
+      "met": false,
+      "detail": "The lab signing key is written down in the build notes and is not imported here. gpgcheck=1 before that key exists stops every install from this repo."
+    },
+    {
+      "host": "rhel-repo01.lab.local",
+      "control": "RHEL-08-010371",
+      "probe": "rpm -q gpg-pubkey",
+      "met": false,
+      "detail": "localpkg_gpgcheck fails closed the same way when the signing key was never imported."
+    }
+  ],
+  "depends_on": [
+    {
+      "host": "rhel-mission01.lab.local",
+      "control": "RHEL-08-010370",
+      "upstream_host": "rhel-repo01.lab.local",
+      "upstream_control": "RHEL-08-010370",
+      "because": "The mission host passes GPG checking and installs from the lab repo. The repo host still publishes packages with gpgcheck off, so this pass does not cover the packages."
+    }
+  ],
+  "restart_bundles": [
+    {
+      "host": "rhel-mission01.lab.local",
+      "service": "sshd",
+      "controls": ["RHEL-08-010550", "CVE-2024-6387", "CVE-2023-48795"]
+    }
+  ]
+}

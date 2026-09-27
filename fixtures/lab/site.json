@@ -1,0 +1,5 @@
+{
+  "name": "Integration Lab",
+  "environment": "Unclassified integration lab",
+  "description": "A small lab that mirrors a ground enclave: directory services, patching, a RHEL repository, one mission host, and vSphere. Nothing here is classified. The exports are synthetic, in the shapes SCC, STIG Viewer, and ACAS write."
+}

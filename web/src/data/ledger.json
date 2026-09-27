@@ -1,0 +1,2643 @@
+{
+  "tool": "findings-register",
+  "version": "0.1.0",
+  "generated_for": "2026-09-27",
+  "site": {
+    "name": "Integration Lab",
+    "environment": "Unclassified integration lab",
+    "description": "A small lab that mirrors a ground enclave: directory services, patching, a RHEL repository, one mission host, and vSphere. Nothing here is classified. The exports are synthetic, in the shapes SCC, STIG Viewer, and ACAS write."
+  },
+  "policy": {
+    "sla_days": {
+      "I": 30,
+      "II": 90,
+      "III": 365
+    },
+    "due_soon_days": 21,
+    "regression_restarts_clock": true,
+    "exception_grace_days": 0,
+    "cvss_cat_i_min": 7.0,
+    "cvss_cat_ii_min": 4.0
+  },
+  "milestones": {
+    "baseline": "2026-07-15",
+    "previous": "2026-08-20",
+    "current": "2026-09-20"
+  },
+  "hosts": [
+    {
+      "hostname": "ad01.lab.local",
+      "platform": "windows2022",
+      "role": "Domain controller, DNS, DHCP",
+      "owner": "IT Engineering",
+      "environment": "Integration Lab",
+      "address": "10.8.1.10",
+      "window_note": "This is the only domain controller. Do not reboot it in the same window as WSUS, and do not change Kerberos clock tolerance until ESXi time is fixed."
+    },
+    {
+      "hostname": "wsus01.lab.local",
+      "platform": "windows2022",
+      "role": "WSUS and patch repository",
+      "owner": "IT Engineering",
+      "environment": "Integration Lab",
+      "address": "10.8.1.11",
+      "window_note": "SMBv1 removal wants a reboot. Take the backup failure on this host first so you are not uninstalling features on a box you cannot restore."
+    },
+    {
+      "hostname": "rhel-repo01.lab.local",
+      "platform": "rhel8",
+      "role": "DNF repository and Ansible controller",
+      "owner": "IT Engineering",
+      "environment": "Integration Lab",
+      "address": "10.8.1.20",
+      "window_note": "Import the lab GPG key, then set gpgcheck and localpkg_gpgcheck. Password length does not need a reboot. SSH root is already closed here."
+    },
+    {
+      "hostname": "rhel-mission01.lab.local",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "environment": "Integration Lab",
+      "address": "10.8.1.21",
+      "window_note": "iDRAC is on the bench. Update OpenSSH, install audit, and set PermitRootLogin, then restart sshd once with someone at the console."
+    },
+    {
+      "hostname": "esxi01.lab.local",
+      "platform": "esxi8",
+      "role": "Hypervisor",
+      "owner": "IT Engineering",
+      "environment": "Integration Lab",
+      "address": "10.8.1.30",
+      "window_note": "Fix NTP with two sources that do not sync from this host. Leave SSH alone until EX-014 expires. Do not invent a syslog target."
+    },
+    {
+      "hostname": "vcenter01.lab.local",
+      "platform": "vcenter",
+      "role": "vCenter Server",
+      "owner": "IT Engineering",
+      "environment": "Integration Lab",
+      "address": "10.8.1.31",
+      "window_note": "No open vCenter findings in this sample. The host is here because lockdown and the handoff both depend on it."
+    }
+  ],
+  "services": [
+    {
+      "name": "Active Directory",
+      "host": "ad01.lab.local",
+      "runbook": "docs/runbooks/active-directory.md"
+    },
+    {
+      "name": "DNS",
+      "host": "ad01.lab.local",
+      "runbook": "docs/runbooks/dns.md"
+    },
+    {
+      "name": "DHCP",
+      "host": "ad01.lab.local",
+      "runbook": null
+    },
+    {
+      "name": "WSUS",
+      "host": "wsus01.lab.local",
+      "runbook": "docs/runbooks/wsus.md"
+    },
+    {
+      "name": "DNF repository",
+      "host": "rhel-repo01.lab.local",
+      "runbook": "docs/runbooks/repository.md"
+    },
+    {
+      "name": "vCenter",
+      "host": "vcenter01.lab.local",
+      "runbook": null
+    }
+  ],
+  "findings": [
+    {
+      "slug": "rhel-repo01--RHEL-08-010370",
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "platform": "rhel8",
+      "role": "DNF repository and Ansible controller",
+      "owner": "IT Engineering",
+      "control": "RHEL-08-010370",
+      "rule_ver": "RHEL-08-010370",
+      "vuln_num": "V-230264",
+      "rule_id": "xccdf_mil.disa.stig_rule_SV-230264r880711_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Repository packages must be GPG-checked before they are installed.",
+      "benchmark": "Red Hat Enterprise Linux 8 STIG",
+      "severity": "high",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "I",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-001749"
+      ],
+      "nist": [
+        "CM-5"
+      ],
+      "result": "fail",
+      "clock": "overdue",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": "2026-08-14",
+      "days_to_due": -44,
+      "days_overdue": 44,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        }
+      ],
+      "comments": "Key is in the build notes. It was never imported on this host.",
+      "detail": "",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "automate",
+        "summary": "Set gpgcheck=1 on the lab repo files after the signing key is imported.",
+        "why": "Unsigned packages from the lab repo are a CAT I on the host that publishes them. The fix is a one-line repo change, and it fails closed: dnf will refuse packages until the key is present, which is what you want.",
+        "verify": "grep -H '^gpgcheck' /etc/yum.repos.d/*.repo && rpm -q gpg-pubkey",
+        "avoid": "Do not flip the bit and walk away. If the key was never imported, the next patch window stops cold."
+      },
+      "exception_id": null,
+      "drift": "persistent",
+      "apply_action": "probe",
+      "apply_reason": "The lab signing key is written down in the build notes and is not imported here. gpgcheck=1 before that key exists stops every install from this repo."
+    },
+    {
+      "slug": "rhel-mission01--RHEL-08-010371",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "RHEL-08-010371",
+      "rule_ver": "RHEL-08-010371",
+      "vuln_num": "V-230265",
+      "rule_id": "xccdf_mil.disa.stig_rule_SV-230265r877463_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Local packages must be GPG-checked before they are installed.",
+      "benchmark": "Red Hat Enterprise Linux 8 STIG",
+      "severity": "high",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "I",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-001749"
+      ],
+      "nist": [
+        "CM-5"
+      ],
+      "result": "fail",
+      "clock": "overdue",
+      "flags": [
+        "opened_since_baseline"
+      ],
+      "regression": false,
+      "first_seen": "2026-08-20",
+      "last_seen": "2026-09-20",
+      "due": "2026-09-19",
+      "days_to_due": -8,
+      "days_overdue": 8,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        }
+      ],
+      "comments": "Same kickstart as the repo host.",
+      "detail": "",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "automate",
+        "summary": "Set localpkg_gpgcheck=True in /etc/dnf/dnf.conf.",
+        "why": "This stops a locally copied RPM from installing without a signature. It does not restart services.",
+        "verify": "grep ^localpkg_gpgcheck /etc/dnf/dnf.conf",
+        "avoid": "Kickstart images that drop unsigned local RPMs during build will start failing. Fix the image, do not disable the check."
+      },
+      "exception_id": null,
+      "drift": "persistent",
+      "apply_action": "allow",
+      "apply_reason": "No signature, dependency, or predecessor blocks this edit."
+    },
+    {
+      "slug": "rhel-repo01--RHEL-08-010371",
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "platform": "rhel8",
+      "role": "DNF repository and Ansible controller",
+      "owner": "IT Engineering",
+      "control": "RHEL-08-010371",
+      "rule_ver": "RHEL-08-010371",
+      "vuln_num": "V-230265",
+      "rule_id": "xccdf_mil.disa.stig_rule_SV-230265r877463_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Local packages must be GPG-checked before they are installed.",
+      "benchmark": "Red Hat Enterprise Linux 8 STIG",
+      "severity": "high",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "I",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-001749"
+      ],
+      "nist": [
+        "CM-5"
+      ],
+      "result": "fail",
+      "clock": "overdue",
+      "flags": [
+        "opened_since_baseline"
+      ],
+      "regression": false,
+      "first_seen": "2026-08-20",
+      "last_seen": "2026-09-20",
+      "due": "2026-09-19",
+      "days_to_due": -8,
+      "days_overdue": 8,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        }
+      ],
+      "comments": "Kickstart rewrite dropped localpkg_gpgcheck.",
+      "detail": "",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "automate",
+        "summary": "Set localpkg_gpgcheck=True in /etc/dnf/dnf.conf.",
+        "why": "This stops a locally copied RPM from installing without a signature. It does not restart services.",
+        "verify": "grep ^localpkg_gpgcheck /etc/dnf/dnf.conf",
+        "avoid": "Kickstart images that drop unsigned local RPMs during build will start failing. Fix the image, do not disable the check."
+      },
+      "exception_id": null,
+      "drift": "persistent",
+      "apply_action": "probe",
+      "apply_reason": "localpkg_gpgcheck fails closed the same way when the signing key was never imported."
+    },
+    {
+      "slug": "wsus01--WN22-00-000380",
+      "host": "wsus01.lab.local",
+      "host_short": "wsus01",
+      "platform": "windows2022",
+      "role": "WSUS and patch repository",
+      "owner": "IT Engineering",
+      "control": "WN22-00-000380",
+      "rule_ver": "WN22-00-000380",
+      "vuln_num": "V-254275",
+      "rule_id": "SV-254275r958478_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "The SMBv1 feature must not be installed.",
+      "benchmark": "Microsoft Windows Server 2022 Security Technical Implementation Guide",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000381"
+      ],
+      "nist": [],
+      "result": "fail",
+      "clock": "overdue",
+      "flags": [
+        "exception_expired"
+      ],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": "2026-09-01",
+      "days_to_due": -26,
+      "days_overdue": 26,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        }
+      ],
+      "comments": "Dropbox migration finished 1 Sep. Feature is still installed.",
+      "detail": "Dropbox migration finished 1 Sep. Feature is still installed.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "change-window",
+        "summary": "Uninstall the FS-SMB1 feature. Plan the reboot.",
+        "why": "SMBv1 on the WSUS server is how a lab share becomes the easy pivot. The STIG severity is medium. The expired exception is what made it late.",
+        "verify": "Get-WindowsFeature -Name FS-SMB1",
+        "avoid": "Do not uninstall SMBv1 on a domain controller in the same change. This finding is the WSUS host."
+      },
+      "exception_id": "EX-007",
+      "drift": "persistent",
+      "apply_action": "refuse",
+      "apply_reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days."
+    },
+    {
+      "slug": "rhel-mission01--CVE-2024-6387",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "CVE-2024-6387",
+      "rule_ver": null,
+      "vuln_num": null,
+      "rule_id": null,
+      "plugin_id": "201194",
+      "cve": "CVE-2024-6387",
+      "title": "OpenSSH signal-handler race during authentication.",
+      "benchmark": "ACAS",
+      "severity": "high",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "I",
+      "cat_source": "cvss",
+      "cci": [],
+      "nist": [],
+      "result": "fail",
+      "clock": "due_soon",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-05",
+      "last_seen": "2026-09-20",
+      "due": "2026-10-05",
+      "days_to_due": 8,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-05",
+          "result": "fail",
+          "sources": [
+            "acas"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "acas"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "OpenSSH signal-handler race during authentication.",
+      "engineer_note": "",
+      "cvss": 8.1,
+      "remediation": {
+        "class": "change-window",
+        "summary": "Update OpenSSH from the lab repo in the same window as the SSH STIG items.",
+        "why": "This is the unauthenticated sshd signal-handler race. It shares a reboot-free but session-killing restart with PermitRootLogin.",
+        "verify": "rpm -q openssh-server and confirm the package is newer than the vulnerable build.",
+        "avoid": "Do not restart sshd twice. Land the package, the root-login setting, and the audit package, then restart once."
+      },
+      "exception_id": null,
+      "drift": "new",
+      "apply_action": "bundle",
+      "apply_reason": "These open rows restart sshd together: RHEL-08-010550, CVE-2024-6387, CVE-2023-48795. Doing one of them restarts the service before the others land."
+    },
+    {
+      "slug": "rhel-mission01--RHEL-08-010370",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "RHEL-08-010370",
+      "rule_ver": "RHEL-08-010370",
+      "vuln_num": "V-230264",
+      "rule_id": "xccdf_mil.disa.stig_rule_SV-230264r880711_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Repository packages must be GPG-checked before they are installed.",
+      "benchmark": "Red Hat Enterprise Linux 8 STIG",
+      "severity": "high",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "I",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-001749"
+      ],
+      "nist": [
+        "CM-5"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [
+        "hollow_pass"
+      ],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "automate",
+        "summary": "Set gpgcheck=1 on the lab repo files after the signing key is imported.",
+        "why": "Unsigned packages from the lab repo are a CAT I on the host that publishes them. The fix is a one-line repo change, and it fails closed: dnf will refuse packages until the key is present, which is what you want.",
+        "verify": "grep -H '^gpgcheck' /etc/yum.repos.d/*.repo && rpm -q gpg-pubkey",
+        "avoid": "Do not flip the bit and walk away. If the key was never imported, the next patch window stops cold."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": "hollow",
+      "apply_reason": "The mission host passes GPG checking and installs from the lab repo. The repo host still publishes packages with gpgcheck off, so this pass does not cover the packages."
+    },
+    {
+      "slug": "esxi01--ESXI-80-000114",
+      "host": "esxi01.lab.local",
+      "host_short": "esxi01",
+      "platform": "esxi8",
+      "role": "Hypervisor",
+      "owner": "IT Engineering",
+      "control": "ESXI-80-000114",
+      "rule_ver": "ESXI-80-000114",
+      "vuln_num": "V-258744",
+      "rule_id": "SV-258744r1015921_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "ESXi must forward logs to a site syslog collector.",
+      "benchmark": "VMware vSphere 8.0 ESXi STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000015"
+      ],
+      "nist": [
+        "AC-2"
+      ],
+      "result": "fail",
+      "clock": "due_soon",
+      "flags": [
+        "exception_pending"
+      ],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": "2026-10-13",
+      "days_to_due": 16,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "No collector on the lab network yet.",
+      "detail": "Syslog.global.logHost is empty.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "blocked",
+        "summary": "Do not set a logHost until the collector is actually up.",
+        "why": "An empty syslog target is an honest failure. Pointing it at a hostname that does not answer turns it into a false pass and you lose the logs.",
+        "verify": "Syslog.global.logHost is a collector that received a test event.",
+        "avoid": "A one-line advanced setting is not remediation if nothing is listening."
+      },
+      "exception_id": "EX-021",
+      "drift": "persistent",
+      "apply_action": "refuse",
+      "apply_reason": "A value written here would pass the check while the control is still false. An empty syslog target is an honest failure. Pointing it at a hostname that does not answer turns it into a false pass and you lose the logs."
+    },
+    {
+      "slug": "rhel-repo01--RHEL-08-020230",
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "platform": "rhel8",
+      "role": "DNF repository and Ansible controller",
+      "owner": "IT Engineering",
+      "control": "RHEL-08-020230",
+      "rule_ver": "RHEL-08-020230",
+      "vuln_num": "V-230369",
+      "rule_id": "xccdf_mil.disa.stig_rule_SV-230369r858785_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Passwords must be at least 15 characters.",
+      "benchmark": "Red Hat Enterprise Linux 8 STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000205"
+      ],
+      "nist": [
+        "IA-5"
+      ],
+      "result": "fail",
+      "clock": "due_soon",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": "2026-10-13",
+      "days_to_due": 16,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        }
+      ],
+      "comments": "minlen is still 8.",
+      "detail": "",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "automate",
+        "summary": "Set minlen = 15 in /etc/security/pwquality.conf.",
+        "why": "This binds the next password change. It does not expire current passwords.",
+        "verify": "grep ^minlen /etc/security/pwquality.conf",
+        "avoid": "Existing local accounts stay as they are until the password is changed. Say that in the POA&M comment so an assessor does not call it a false close."
+      },
+      "exception_id": null,
+      "drift": "persistent",
+      "apply_action": "allow",
+      "apply_reason": "No signature, dependency, or predecessor blocks this edit."
+    },
+    {
+      "slug": "wsus01--WN22-AC-000070",
+      "host": "wsus01.lab.local",
+      "host_short": "wsus01",
+      "platform": "windows2022",
+      "role": "WSUS and patch repository",
+      "owner": "IT Engineering",
+      "control": "WN22-AC-000070",
+      "rule_ver": "WN22-AC-000070",
+      "vuln_num": null,
+      "rule_id": null,
+      "plugin_id": null,
+      "cve": null,
+      "title": "Minimum password length must be 14 characters.",
+      "benchmark": "Microsoft Windows Server 2022 Security Technical Implementation Guide",
+      "severity": "medium",
+      "severity_verified": false,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [],
+      "nist": [],
+      "result": "fail",
+      "clock": "due_soon",
+      "flags": [
+        "severity_unverified"
+      ],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": "2026-10-13",
+      "days_to_due": 16,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        }
+      ],
+      "comments": "Effective length is 8. Fix the GPO link, not the local policy.",
+      "detail": "Effective length is 8. Fix the GPO link, not the local policy.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "gpo",
+        "summary": "Link the password-policy GPO to the member server OU. Do not secedit the box.",
+        "why": "wsus01 is domain-joined. A local policy edit looks fixed until the next gpupdate, or it fights the domain policy. The domain controller OU already has the setting.",
+        "verify": "gpresult /h report.html and confirm the winning GPO for MinimumPasswordLength.",
+        "avoid": "A script that writes the local security policy will not survive domain join, and it will confuse the next person who reads secedit."
+      },
+      "exception_id": null,
+      "drift": "persistent",
+      "apply_action": "refuse",
+      "apply_reason": "This host takes the setting from Group Policy. A local edit loses to the next gpupdate."
+    },
+    {
+      "slug": "esxi01--ESXI-80-000193",
+      "host": "esxi01.lab.local",
+      "host_short": "esxi01",
+      "platform": "esxi8",
+      "role": "Hypervisor",
+      "owner": "IT Engineering",
+      "control": "ESXI-80-000193",
+      "rule_ver": "ESXI-80-000193",
+      "vuln_num": "V-258754",
+      "rule_id": "SV-258754r958478_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "The ESXi SSH service must be stopped.",
+      "benchmark": "VMware vSphere 8.0 ESXi STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000381"
+      ],
+      "nist": [
+        "CM-7"
+      ],
+      "result": "fail",
+      "clock": "excepted",
+      "flags": [
+        "excepted"
+      ],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": "2026-10-15",
+      "days_to_due": 18,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "Break-glass for the integration campaign. See EX-014.",
+      "detail": "SSH is running.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "do-not-automate",
+        "summary": "Leave SSH as the approved break-glass path until the exception expires.",
+        "why": "An approved exception is not a failure you quietly close. Stopping SSH from a playbook would violate the exception and remove the path the change record depends on.",
+        "verify": "SSH running, source limited to the jump host, exception still inside its end date.",
+        "avoid": "Automation that stops SSH because the STIG says so will fight the ISSO's signature."
+      },
+      "exception_id": "EX-014",
+      "drift": "persistent",
+      "apply_action": "refuse",
+      "apply_reason": "EX-014 is signed through 2026-10-15. Closing this from a playbook would pass the scan and break that signature."
+    },
+    {
+      "slug": "ad01--WN22-DC-000060",
+      "host": "ad01.lab.local",
+      "host_short": "ad01",
+      "platform": "windows2022",
+      "role": "Domain controller, DNS, DHCP",
+      "owner": "IT Engineering",
+      "control": "WN22-DC-000060",
+      "rule_ver": "WN22-DC-000060",
+      "vuln_num": null,
+      "rule_id": null,
+      "plugin_id": null,
+      "cve": null,
+      "title": "Domain controller clock skew must stay within five minutes.",
+      "benchmark": "Microsoft Windows Server 2022 Security Technical Implementation Guide",
+      "severity": "medium",
+      "severity_verified": false,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [],
+      "nist": [],
+      "result": "fail",
+      "clock": "on_track",
+      "flags": [
+        "severity_unverified",
+        "opened_since_baseline"
+      ],
+      "regression": false,
+      "first_seen": "2026-08-20",
+      "last_seen": "2026-09-20",
+      "due": "2026-11-18",
+      "days_to_due": 52,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "pass",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        }
+      ],
+      "comments": "Do not tighten Kerberos tolerance until ESXi stops using this DC for NTP.",
+      "detail": "Do not tighten Kerberos tolerance until ESXi stops using this DC for NTP.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "do-not-automate",
+        "summary": "Fix the NTP hierarchy before touching Kerberos clock tolerance.",
+        "why": "The domain controller is taking time from ESXi, and ESXi is taking time from the domain controller. Tightening the five-minute tolerance on the DC will start failing Kerberos logons while the loop is still there.",
+        "verify": "w32tm /query /status /verbose",
+        "avoid": "Do not 'remediate' this with a policy script. The failing ESXi NTP finding is the actual work."
+      },
+      "exception_id": null,
+      "drift": "persistent",
+      "apply_action": "refuse",
+      "apply_reason": "ad01 and esxi01 take time from each other. Fixing either side leaves the loop in place."
+    },
+    {
+      "slug": "esxi01--ESXI-80-000124",
+      "host": "esxi01.lab.local",
+      "host_short": "esxi01",
+      "platform": "esxi8",
+      "role": "Hypervisor",
+      "owner": "IT Engineering",
+      "control": "ESXI-80-000124",
+      "rule_ver": "ESXI-80-000124",
+      "vuln_num": "V-258745",
+      "rule_id": "SV-258745r1038976_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "ESXi must synchronize time from an authoritative source.",
+      "benchmark": "VMware vSphere 8.0 ESXi STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-004923"
+      ],
+      "nist": [],
+      "result": "fail",
+      "clock": "on_track",
+      "flags": [
+        "opened_since_baseline"
+      ],
+      "regression": false,
+      "first_seen": "2026-08-20",
+      "last_seen": "2026-09-20",
+      "due": "2026-11-18",
+      "days_to_due": 52,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "pass",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "Only peer is ad01, and ad01 takes time from this host.",
+      "detail": "NTP servers are ad01.lab.local. Those hosts take time from this ESXi host, so the chain is circular.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "change-window",
+        "summary": "Point ESXi at two time sources that do not sync from this host, then fix the DC.",
+        "why": "Mission timestamps and Kerberos both assume this clock is real. The current peer is the domain controller that trusts this host.",
+        "verify": "NTP service running, at least one source that is not ad01, offset stable.",
+        "avoid": "Adding ad01 as the only NTP server makes the STIG check look closer to passing and keeps the loop."
+      },
+      "exception_id": null,
+      "drift": "persistent",
+      "apply_action": "refuse",
+      "apply_reason": "esxi01 and ad01 take time from each other. Fixing either side leaves the loop in place."
+    },
+    {
+      "slug": "rhel-mission01--CVE-2023-48795",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "CVE-2023-48795",
+      "rule_ver": null,
+      "vuln_num": null,
+      "rule_id": null,
+      "plugin_id": "187315",
+      "cve": "CVE-2023-48795",
+      "title": "SSH prefix truncation can weaken the handshake.",
+      "benchmark": "ACAS",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "cvss",
+      "cci": [],
+      "nist": [],
+      "result": "fail",
+      "clock": "on_track",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-08-20",
+      "last_seen": "2026-09-20",
+      "due": "2026-11-18",
+      "days_to_due": 52,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "acas"
+          ]
+        },
+        {
+          "date": "2026-09-05",
+          "result": "fail",
+          "sources": [
+            "acas"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "acas"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "SSH prefix truncation can weaken the handshake.",
+      "engineer_note": "",
+      "cvss": 5.9,
+      "remediation": {
+        "class": "change-window",
+        "summary": "Take the OpenSSH update that includes the strict key-exchange countermeasure.",
+        "why": "Terrapin is a protocol downgrade. It closes with the same package update as CVE-2024-6387 on this host.",
+        "verify": "ssh -Q kex includes the strict KEX algorithms after the update.",
+        "avoid": "Disabling ChaCha20 by hand to silence the plugin is a local workaround, not the fix, and it surprises the next scan."
+      },
+      "exception_id": null,
+      "drift": "persistent",
+      "apply_action": "bundle",
+      "apply_reason": "These open rows restart sshd together: RHEL-08-010550, CVE-2024-6387, CVE-2023-48795. Doing one of them restarts the service before the others land."
+    },
+    {
+      "slug": "rhel-mission01--RHEL-08-010550",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "RHEL-08-010550",
+      "rule_ver": "RHEL-08-010550",
+      "vuln_num": "V-230296",
+      "rule_id": "xccdf_mil.disa.stig_rule_SV-230296r858711_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Direct SSH logons as root must be disabled.",
+      "benchmark": "Red Hat Enterprise Linux 8 STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000770"
+      ],
+      "nist": [
+        "IA-2"
+      ],
+      "result": "fail",
+      "clock": "on_track",
+      "flags": [
+        "opened_since_baseline"
+      ],
+      "regression": false,
+      "first_seen": "2026-08-20",
+      "last_seen": "2026-09-20",
+      "due": "2026-11-18",
+      "days_to_due": 52,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        }
+      ],
+      "comments": "Console is the iDRAC on the bench. Restart sshd only with someone standing there.",
+      "detail": "",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "change-window",
+        "summary": "Set PermitRootLogin no and restart sshd with someone at the console.",
+        "why": "The effective check is `sshd -T | grep permitrootlogin`, not a grep of the file. A restart drops every session on that daemon.",
+        "verify": "sshd -T | grep -i permitrootlogin",
+        "avoid": "Do not restart sshd on the mission host from the only remote session you have."
+      },
+      "exception_id": null,
+      "drift": "persistent",
+      "apply_action": "bundle",
+      "apply_reason": "These open rows restart sshd together: RHEL-08-010550, CVE-2024-6387, CVE-2023-48795. Doing one of them restarts the service before the others land."
+    },
+    {
+      "slug": "rhel-mission01--RHEL-08-030180",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "RHEL-08-030180",
+      "rule_ver": "RHEL-08-030180",
+      "vuln_num": "V-230411",
+      "rule_id": "xccdf_mil.disa.stig_rule_SV-230411r744000_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "The audit package must be installed.",
+      "benchmark": "Red Hat Enterprise Linux 8 STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000169"
+      ],
+      "nist": [
+        "AU-12"
+      ],
+      "result": "fail",
+      "clock": "on_track",
+      "flags": [
+        "regression"
+      ],
+      "regression": true,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": "2026-12-19",
+      "days_to_due": 83,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        }
+      ],
+      "comments": "audit RPM is gone after the September update.",
+      "detail": "",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "change-window",
+        "summary": "Install the audit package and confirm auditd is running before the next scan.",
+        "why": "The September scan regressed. The package was present in August. Treat it as a patch-window casualty, not a new design question.",
+        "verify": "rpm -q audit && systemctl is-active auditd",
+        "avoid": "Loading a full audit ruleset on a mission box can stall the host. Install the package first, add rules in the same window, and watch the bench."
+      },
+      "exception_id": null,
+      "drift": "regressed",
+      "apply_action": "window",
+      "apply_reason": "This restarts a service or wants a reboot. An unattended run will not touch it. Someone has to be at the console."
+    },
+    {
+      "slug": "ad01--WN22-00-000380",
+      "host": "ad01.lab.local",
+      "host_short": "ad01",
+      "platform": "windows2022",
+      "role": "Domain controller, DNS, DHCP",
+      "owner": "IT Engineering",
+      "control": "WN22-00-000380",
+      "rule_ver": "WN22-00-000380",
+      "vuln_num": "V-254275",
+      "rule_id": "SV-254275r958478_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "The SMBv1 feature must not be installed.",
+      "benchmark": "Microsoft Windows Server 2022 Security Technical Implementation Guide",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000381"
+      ],
+      "nist": [],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "pass",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "pass",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "ckl"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "change-window",
+        "summary": "Uninstall the FS-SMB1 feature. Plan the reboot.",
+        "why": "SMBv1 on the WSUS server is how a lab share becomes the easy pivot. The STIG severity is medium. The expired exception is what made it late.",
+        "verify": "Get-WindowsFeature -Name FS-SMB1",
+        "avoid": "Do not uninstall SMBv1 on a domain controller in the same change. This finding is the WSUS host."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "ad01--WN22-AC-000070",
+      "host": "ad01.lab.local",
+      "host_short": "ad01",
+      "platform": "windows2022",
+      "role": "Domain controller, DNS, DHCP",
+      "owner": "IT Engineering",
+      "control": "WN22-AC-000070",
+      "rule_ver": "WN22-AC-000070",
+      "vuln_num": null,
+      "rule_id": null,
+      "plugin_id": null,
+      "cve": null,
+      "title": "Minimum password length must be 14 characters.",
+      "benchmark": "Microsoft Windows Server 2022 Security Technical Implementation Guide",
+      "severity": "medium",
+      "severity_verified": false,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [],
+      "nist": [],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [
+        "severity_unverified"
+      ],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "pass",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "pass",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "ckl"
+          ]
+        }
+      ],
+      "comments": "Domain policy is 14.",
+      "detail": "Domain policy is 14.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "gpo",
+        "summary": "Link the password-policy GPO to the member server OU. Do not secedit the box.",
+        "why": "wsus01 is domain-joined. A local policy edit looks fixed until the next gpupdate, or it fights the domain policy. The domain controller OU already has the setting.",
+        "verify": "gpresult /h report.html and confirm the winning GPO for MinimumPasswordLength.",
+        "avoid": "A script that writes the local security policy will not survive domain join, and it will confuse the next person who reads secedit."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "esxi01--ESXI-80-000008",
+      "host": "esxi01.lab.local",
+      "host_short": "esxi01",
+      "platform": "esxi8",
+      "role": "Hypervisor",
+      "owner": "IT Engineering",
+      "control": "ESXI-80-000008",
+      "rule_ver": "ESXI-80-000008",
+      "vuln_num": "V-258730",
+      "rule_id": "SV-258730r958398_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "ESXi lockdown mode must be enabled.",
+      "benchmark": "VMware vSphere 8.0 ESXi STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000054"
+      ],
+      "nist": [
+        "AC-10"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "pass",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "pass",
+          "sources": [
+            "ckl"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "Lockdown is Normal.",
+      "detail": "Lockdown mode is lockdownnormal.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "do-not-automate",
+        "summary": "Leave lockdown enabled. Strict mode is a separate decision.",
+        "why": "Normal lockdown is already on. Strict lockdown disables the DCUI. If vCenter is unreachable during a campaign, strict mode strands the host.",
+        "verify": "Lockdown mode reads Normal or Strict.",
+        "avoid": "Do not flip a passing host to Strict to 'be safer' without a console plan."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "rhel-mission01--RHEL-08-020230",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "RHEL-08-020230",
+      "rule_ver": "RHEL-08-020230",
+      "vuln_num": "V-230369",
+      "rule_id": "xccdf_mil.disa.stig_rule_SV-230369r858785_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Passwords must be at least 15 characters.",
+      "benchmark": "Red Hat Enterprise Linux 8 STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000205"
+      ],
+      "nist": [
+        "IA-5"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "automate",
+        "summary": "Set minlen = 15 in /etc/security/pwquality.conf.",
+        "why": "This binds the next password change. It does not expire current passwords.",
+        "verify": "grep ^minlen /etc/security/pwquality.conf",
+        "avoid": "Existing local accounts stay as they are until the password is changed. Say that in the POA&M comment so an assessor does not call it a false close."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "rhel-repo01--RHEL-08-010550",
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "platform": "rhel8",
+      "role": "DNF repository and Ansible controller",
+      "owner": "IT Engineering",
+      "control": "RHEL-08-010550",
+      "rule_ver": "RHEL-08-010550",
+      "vuln_num": "V-230296",
+      "rule_id": "xccdf_mil.disa.stig_rule_SV-230296r858711_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Direct SSH logons as root must be disabled.",
+      "benchmark": "Red Hat Enterprise Linux 8 STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000770"
+      ],
+      "nist": [
+        "IA-2"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "fail",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        }
+      ],
+      "comments": "Closed during the repo host window. sshd restarted from the console.",
+      "detail": "",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "change-window",
+        "summary": "Set PermitRootLogin no and restart sshd with someone at the console.",
+        "why": "The effective check is `sshd -T | grep permitrootlogin`, not a grep of the file. A restart drops every session on that daemon.",
+        "verify": "sshd -T | grep -i permitrootlogin",
+        "avoid": "Do not restart sshd on the mission host from the only remote session you have."
+      },
+      "exception_id": null,
+      "drift": "closed",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "rhel-repo01--RHEL-08-030180",
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "platform": "rhel8",
+      "role": "DNF repository and Ansible controller",
+      "owner": "IT Engineering",
+      "control": "RHEL-08-030180",
+      "rule_ver": "RHEL-08-030180",
+      "vuln_num": "V-230411",
+      "rule_id": "xccdf_mil.disa.stig_rule_SV-230411r744000_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "The audit package must be installed.",
+      "benchmark": "Red Hat Enterprise Linux 8 STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000169"
+      ],
+      "nist": [
+        "AU-12"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-07-15",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-07-15",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-08-20",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        },
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "xccdf"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "change-window",
+        "summary": "Install the audit package and confirm auditd is running before the next scan.",
+        "why": "The September scan regressed. The package was present in August. Treat it as a patch-window casualty, not a new design question.",
+        "verify": "rpm -q audit && systemctl is-active auditd",
+        "avoid": "Loading a full audit ruleset on a mission box can stall the host. Install the package first, add rules in the same window, and watch the bench."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    }
+  ],
+  "exceptions": [
+    {
+      "id": "EX-014",
+      "host": "esxi01.lab.local",
+      "control": "ESXI-80-000193",
+      "status": "approved",
+      "rationale": "Break-glass SSH for the integration campaign. Day-to-day administration stays on vCenter. SSH is limited to the jump host.",
+      "compensating": "Lockdown stays Normal. SSH is limited to the jump-host subnet. Sessions are recorded on the admin workstation.",
+      "approver": "ISSO",
+      "approver_name": "A. Okonkwo",
+      "approved_on": "2026-08-28",
+      "expires": "2026-10-15",
+      "ticket": "CHG-1044",
+      "display_status": "approved",
+      "finding_slug": "esxi01--ESXI-80-000193"
+    },
+    {
+      "id": "EX-007",
+      "host": "wsus01.lab.local",
+      "control": "WN22-00-000380",
+      "status": "approved",
+      "rationale": "The payload ICD dropbox still spoke SMBv1. The software drop that removes that dependency finished on 1 Sep.",
+      "compensating": "The share was limited to the integration VLAN and SMB signing stayed required. No other host had the feature installed.",
+      "approver": "ISSO",
+      "approver_name": "A. Okonkwo",
+      "approved_on": "2026-07-20",
+      "expires": "2026-09-01",
+      "ticket": "CHG-0988",
+      "display_status": "expired",
+      "finding_slug": "wsus01--WN22-00-000380"
+    },
+    {
+      "id": "EX-021",
+      "host": "esxi01.lab.local",
+      "control": "ESXI-80-000114",
+      "status": "pending",
+      "rationale": "The lab has no syslog collector. Setting logHost to a name that does not answer would turn a real gap into a false pass.",
+      "compensating": "Host logs stay on ESXi. Retention is checked weekly until a collector exists.",
+      "approver": "ISSO",
+      "approver_name": "",
+      "approved_on": "",
+      "expires": "2026-12-01",
+      "ticket": "CHG-1102",
+      "display_status": "pending",
+      "finding_slug": "esxi01--ESXI-80-000114"
+    }
+  ],
+  "drift": {
+    "regressed": [
+      {
+        "slug": "rhel-mission01--RHEL-08-030180",
+        "host": "rhel-mission01.lab.local",
+        "control": "RHEL-08-030180",
+        "title": "The audit package must be installed.",
+        "cat": "II"
+      }
+    ],
+    "closed": [
+      {
+        "slug": "rhel-repo01--RHEL-08-010550",
+        "host": "rhel-repo01.lab.local",
+        "control": "RHEL-08-010550",
+        "title": "Direct SSH logons as root must be disabled.",
+        "cat": "II"
+      }
+    ],
+    "persistent": [
+      {
+        "slug": "rhel-repo01--RHEL-08-010370",
+        "host": "rhel-repo01.lab.local",
+        "control": "RHEL-08-010370",
+        "title": "Repository packages must be GPG-checked before they are installed.",
+        "cat": "I"
+      },
+      {
+        "slug": "rhel-mission01--RHEL-08-010371",
+        "host": "rhel-mission01.lab.local",
+        "control": "RHEL-08-010371",
+        "title": "Local packages must be GPG-checked before they are installed.",
+        "cat": "I"
+      },
+      {
+        "slug": "rhel-repo01--RHEL-08-010371",
+        "host": "rhel-repo01.lab.local",
+        "control": "RHEL-08-010371",
+        "title": "Local packages must be GPG-checked before they are installed.",
+        "cat": "I"
+      },
+      {
+        "slug": "wsus01--WN22-00-000380",
+        "host": "wsus01.lab.local",
+        "control": "WN22-00-000380",
+        "title": "The SMBv1 feature must not be installed.",
+        "cat": "II"
+      },
+      {
+        "slug": "esxi01--ESXI-80-000114",
+        "host": "esxi01.lab.local",
+        "control": "ESXI-80-000114",
+        "title": "ESXi must forward logs to a site syslog collector.",
+        "cat": "II"
+      },
+      {
+        "slug": "rhel-repo01--RHEL-08-020230",
+        "host": "rhel-repo01.lab.local",
+        "control": "RHEL-08-020230",
+        "title": "Passwords must be at least 15 characters.",
+        "cat": "II"
+      },
+      {
+        "slug": "wsus01--WN22-AC-000070",
+        "host": "wsus01.lab.local",
+        "control": "WN22-AC-000070",
+        "title": "Minimum password length must be 14 characters.",
+        "cat": "II"
+      },
+      {
+        "slug": "esxi01--ESXI-80-000193",
+        "host": "esxi01.lab.local",
+        "control": "ESXI-80-000193",
+        "title": "The ESXi SSH service must be stopped.",
+        "cat": "II"
+      },
+      {
+        "slug": "ad01--WN22-DC-000060",
+        "host": "ad01.lab.local",
+        "control": "WN22-DC-000060",
+        "title": "Domain controller clock skew must stay within five minutes.",
+        "cat": "II"
+      },
+      {
+        "slug": "esxi01--ESXI-80-000124",
+        "host": "esxi01.lab.local",
+        "control": "ESXI-80-000124",
+        "title": "ESXi must synchronize time from an authoritative source.",
+        "cat": "II"
+      },
+      {
+        "slug": "rhel-mission01--CVE-2023-48795",
+        "host": "rhel-mission01.lab.local",
+        "control": "CVE-2023-48795",
+        "title": "SSH prefix truncation can weaken the handshake.",
+        "cat": "II"
+      },
+      {
+        "slug": "rhel-mission01--RHEL-08-010550",
+        "host": "rhel-mission01.lab.local",
+        "control": "RHEL-08-010550",
+        "title": "Direct SSH logons as root must be disabled.",
+        "cat": "II"
+      }
+    ],
+    "new": [
+      {
+        "slug": "rhel-mission01--CVE-2024-6387",
+        "host": "rhel-mission01.lab.local",
+        "control": "CVE-2024-6387",
+        "title": "OpenSSH signal-handler race during authentication.",
+        "cat": "I"
+      }
+    ],
+    "opened_since_baseline": [
+      {
+        "slug": "rhel-mission01--RHEL-08-010371",
+        "host": "rhel-mission01.lab.local",
+        "control": "RHEL-08-010371",
+        "title": "Local packages must be GPG-checked before they are installed.",
+        "cat": "I"
+      },
+      {
+        "slug": "rhel-repo01--RHEL-08-010371",
+        "host": "rhel-repo01.lab.local",
+        "control": "RHEL-08-010371",
+        "title": "Local packages must be GPG-checked before they are installed.",
+        "cat": "I"
+      },
+      {
+        "slug": "ad01--WN22-DC-000060",
+        "host": "ad01.lab.local",
+        "control": "WN22-DC-000060",
+        "title": "Domain controller clock skew must stay within five minutes.",
+        "cat": "II"
+      },
+      {
+        "slug": "esxi01--ESXI-80-000124",
+        "host": "esxi01.lab.local",
+        "control": "ESXI-80-000124",
+        "title": "ESXi must synchronize time from an authoritative source.",
+        "cat": "II"
+      },
+      {
+        "slug": "rhel-mission01--RHEL-08-010550",
+        "host": "rhel-mission01.lab.local",
+        "control": "RHEL-08-010550",
+        "title": "Direct SSH logons as root must be disabled.",
+        "cat": "II"
+      }
+    ]
+  },
+  "backups": [
+    {
+      "host": "ad01.lab.local",
+      "method": "Windows Server Backup, system state, nightly",
+      "rpo_hours": 24,
+      "rto_hours": 4,
+      "last_success": "2026-09-26T22:10:00Z",
+      "last_restore_test": "2026-08-02",
+      "restore_test_max_days": 90,
+      "notes": "Last test restored SYSVOL to an isolated VM.",
+      "age_hours": 13.8,
+      "restore_age_days": 56,
+      "rpo_met": true,
+      "restore_met": true,
+      "status": "ok",
+      "reasons": []
+    },
+    {
+      "host": "wsus01.lab.local",
+      "method": "Windows Server Backup, nightly",
+      "rpo_hours": 24,
+      "rto_hours": 8,
+      "last_success": "2026-09-24T22:10:00Z",
+      "last_restore_test": "2026-06-01",
+      "restore_test_max_days": 90,
+      "notes": "The last two jobs failed because the content volume filled. RPO is missed and the restore test is stale.",
+      "age_hours": 61.8,
+      "restore_age_days": 118,
+      "rpo_met": false,
+      "restore_met": false,
+      "status": "breach",
+      "reasons": [
+        "Last good backup is 61 hours old against an RPO of 24 hours.",
+        "Last restore test was 118 days ago. Policy is 90 days."
+      ]
+    },
+    {
+      "host": "esxi01.lab.local",
+      "method": "vCenter file-based backup to repo01",
+      "rpo_hours": 24,
+      "rto_hours": 8,
+      "last_success": "2026-09-27T02:00:00Z",
+      "last_restore_test": "2026-05-10",
+      "restore_test_max_days": 90,
+      "notes": "A configuration backup is not a VM restore. The last restore test is past policy.",
+      "age_hours": 10.0,
+      "restore_age_days": 140,
+      "rpo_met": true,
+      "restore_met": false,
+      "status": "breach",
+      "reasons": [
+        "Last restore test was 140 days ago. Policy is 90 days."
+      ]
+    },
+    {
+      "host": "rhel-mission01.lab.local",
+      "method": "Nightly restic archive to repo01",
+      "rpo_hours": 24,
+      "rto_hours": 4,
+      "last_success": "2026-09-26T23:40:00Z",
+      "last_restore_test": "2026-09-01",
+      "restore_test_max_days": 90,
+      "notes": "Last test restored a mission directory to a scratch VM.",
+      "age_hours": 12.3,
+      "restore_age_days": 26,
+      "rpo_met": true,
+      "restore_met": true,
+      "status": "ok",
+      "reasons": []
+    },
+    {
+      "host": "rhel-repo01.lab.local",
+      "method": "Nightly repo sync plus disk snapshot",
+      "rpo_hours": 24,
+      "rto_hours": 8,
+      "last_success": "2026-09-27T00:15:00Z",
+      "last_restore_test": "2026-07-20",
+      "restore_test_max_days": 90,
+      "notes": "Repo sync is the thing the other hosts restore from. Test a package install from the copy, not just the snapshot.",
+      "age_hours": 11.8,
+      "restore_age_days": 69,
+      "rpo_met": true,
+      "restore_met": true,
+      "status": "ok",
+      "reasons": []
+    }
+  ],
+  "attention": [
+    {
+      "kind": "finding",
+      "slug": "rhel-repo01--RHEL-08-010370",
+      "href": "/findings/rhel-repo01--RHEL-08-010370",
+      "title": "Repository packages must be GPG-checked before they are installed.",
+      "host": "rhel-repo01",
+      "control": "RHEL-08-010370",
+      "cat": "I",
+      "clock": "overdue",
+      "reason": "Past the CAT clock",
+      "due": "2026-08-14"
+    },
+    {
+      "kind": "finding",
+      "slug": "rhel-mission01--RHEL-08-010371",
+      "href": "/findings/rhel-mission01--RHEL-08-010371",
+      "title": "Local packages must be GPG-checked before they are installed.",
+      "host": "rhel-mission01",
+      "control": "RHEL-08-010371",
+      "cat": "I",
+      "clock": "overdue",
+      "reason": "Past the CAT clock",
+      "due": "2026-09-19"
+    },
+    {
+      "kind": "finding",
+      "slug": "rhel-repo01--RHEL-08-010371",
+      "href": "/findings/rhel-repo01--RHEL-08-010371",
+      "title": "Local packages must be GPG-checked before they are installed.",
+      "host": "rhel-repo01",
+      "control": "RHEL-08-010371",
+      "cat": "I",
+      "clock": "overdue",
+      "reason": "Past the CAT clock",
+      "due": "2026-09-19"
+    },
+    {
+      "kind": "finding",
+      "slug": "wsus01--WN22-00-000380",
+      "href": "/findings/wsus01--WN22-00-000380",
+      "title": "The SMBv1 feature must not be installed.",
+      "host": "wsus01",
+      "control": "WN22-00-000380",
+      "cat": "II",
+      "clock": "overdue",
+      "reason": "Past the CAT clock",
+      "due": "2026-09-01"
+    },
+    {
+      "kind": "finding",
+      "slug": "rhel-mission01--CVE-2024-6387",
+      "href": "/findings/rhel-mission01--CVE-2024-6387",
+      "title": "OpenSSH signal-handler race during authentication.",
+      "host": "rhel-mission01",
+      "control": "CVE-2024-6387",
+      "cat": "I",
+      "clock": "due_soon",
+      "reason": "Due inside the warning window",
+      "due": "2026-10-05"
+    },
+    {
+      "kind": "finding",
+      "slug": "esxi01--ESXI-80-000114",
+      "href": "/findings/esxi01--ESXI-80-000114",
+      "title": "ESXi must forward logs to a site syslog collector.",
+      "host": "esxi01",
+      "control": "ESXI-80-000114",
+      "cat": "II",
+      "clock": "due_soon",
+      "reason": "Due inside the warning window. Exception is still unsigned",
+      "due": "2026-10-13"
+    },
+    {
+      "kind": "finding",
+      "slug": "rhel-repo01--RHEL-08-020230",
+      "href": "/findings/rhel-repo01--RHEL-08-020230",
+      "title": "Passwords must be at least 15 characters.",
+      "host": "rhel-repo01",
+      "control": "RHEL-08-020230",
+      "cat": "II",
+      "clock": "due_soon",
+      "reason": "Due inside the warning window",
+      "due": "2026-10-13"
+    },
+    {
+      "kind": "finding",
+      "slug": "wsus01--WN22-AC-000070",
+      "href": "/findings/wsus01--WN22-AC-000070",
+      "title": "Minimum password length must be 14 characters.",
+      "host": "wsus01",
+      "control": "WN22-AC-000070",
+      "cat": "II",
+      "clock": "due_soon",
+      "reason": "Due inside the warning window",
+      "due": "2026-10-13"
+    },
+    {
+      "kind": "finding",
+      "slug": "rhel-mission01--RHEL-08-030180",
+      "href": "/findings/rhel-mission01--RHEL-08-030180",
+      "title": "The audit package must be installed.",
+      "host": "rhel-mission01",
+      "control": "RHEL-08-030180",
+      "cat": "II",
+      "clock": "on_track",
+      "reason": "Regressed since the previous scan",
+      "due": "2026-12-19"
+    },
+    {
+      "kind": "backup",
+      "slug": "wsus01.lab.local",
+      "href": "/backups",
+      "title": "Windows Server Backup, nightly",
+      "host": "wsus01",
+      "control": "backup",
+      "cat": "",
+      "clock": "breach",
+      "reason": "Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days.",
+      "due": null
+    },
+    {
+      "kind": "backup",
+      "slug": "esxi01.lab.local",
+      "href": "/backups",
+      "title": "vCenter file-based backup to repo01",
+      "host": "esxi01",
+      "control": "backup",
+      "cat": "",
+      "clock": "breach",
+      "reason": "Last restore test was 140 days ago. Policy is 90 days.",
+      "due": null
+    },
+    {
+      "kind": "finding",
+      "slug": "rhel-mission01--RHEL-08-010370",
+      "href": "/findings/rhel-mission01--RHEL-08-010370",
+      "title": "Repository packages must be GPG-checked before they are installed.",
+      "host": "rhel-mission01",
+      "control": "RHEL-08-010370",
+      "cat": "I",
+      "clock": "closed",
+      "reason": "The mission host passes GPG checking and installs from the lab repo. The repo host still publishes packages with gpgcheck off, so this pass does not cover the packages.",
+      "due": null
+    }
+  ],
+  "windows": [
+    {
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "note": "Import the lab GPG key, then set gpgcheck and localpkg_gpgcheck. Password length does not need a reboot. SSH root is already closed here.",
+      "items": [
+        {
+          "slug": "rhel-repo01--RHEL-08-010370",
+          "control": "RHEL-08-010370",
+          "title": "Repository packages must be GPG-checked before they are installed.",
+          "cat": "I",
+          "clock": "overdue",
+          "class": "automate",
+          "days_overdue": 44
+        },
+        {
+          "slug": "rhel-repo01--RHEL-08-010371",
+          "control": "RHEL-08-010371",
+          "title": "Local packages must be GPG-checked before they are installed.",
+          "cat": "I",
+          "clock": "overdue",
+          "class": "automate",
+          "days_overdue": 8
+        },
+        {
+          "slug": "rhel-repo01--RHEL-08-020230",
+          "control": "RHEL-08-020230",
+          "title": "Passwords must be at least 15 characters.",
+          "cat": "II",
+          "clock": "due_soon",
+          "class": "automate",
+          "days_overdue": 0
+        }
+      ]
+    },
+    {
+      "host": "wsus01.lab.local",
+      "host_short": "wsus01",
+      "note": "SMBv1 removal wants a reboot. Take the backup failure on this host first so you are not uninstalling features on a box you cannot restore.",
+      "items": [
+        {
+          "slug": "wsus01--WN22-00-000380",
+          "control": "WN22-00-000380",
+          "title": "The SMBv1 feature must not be installed.",
+          "cat": "II",
+          "clock": "overdue",
+          "class": "change-window",
+          "days_overdue": 26
+        },
+        {
+          "slug": "wsus01--WN22-AC-000070",
+          "control": "WN22-AC-000070",
+          "title": "Minimum password length must be 14 characters.",
+          "cat": "II",
+          "clock": "due_soon",
+          "class": "gpo",
+          "days_overdue": 0
+        }
+      ]
+    },
+    {
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "note": "iDRAC is on the bench. Update OpenSSH, install audit, and set PermitRootLogin, then restart sshd once with someone at the console.",
+      "items": [
+        {
+          "slug": "rhel-mission01--RHEL-08-010371",
+          "control": "RHEL-08-010371",
+          "title": "Local packages must be GPG-checked before they are installed.",
+          "cat": "I",
+          "clock": "overdue",
+          "class": "automate",
+          "days_overdue": 8
+        },
+        {
+          "slug": "rhel-mission01--CVE-2024-6387",
+          "control": "CVE-2024-6387",
+          "title": "OpenSSH signal-handler race during authentication.",
+          "cat": "I",
+          "clock": "due_soon",
+          "class": "change-window",
+          "days_overdue": 0
+        },
+        {
+          "slug": "rhel-mission01--CVE-2023-48795",
+          "control": "CVE-2023-48795",
+          "title": "SSH prefix truncation can weaken the handshake.",
+          "cat": "II",
+          "clock": "on_track",
+          "class": "change-window",
+          "days_overdue": 0
+        },
+        {
+          "slug": "rhel-mission01--RHEL-08-010550",
+          "control": "RHEL-08-010550",
+          "title": "Direct SSH logons as root must be disabled.",
+          "cat": "II",
+          "clock": "on_track",
+          "class": "change-window",
+          "days_overdue": 0
+        },
+        {
+          "slug": "rhel-mission01--RHEL-08-030180",
+          "control": "RHEL-08-030180",
+          "title": "The audit package must be installed.",
+          "cat": "II",
+          "clock": "on_track",
+          "class": "change-window",
+          "days_overdue": 0
+        }
+      ]
+    },
+    {
+      "host": "esxi01.lab.local",
+      "host_short": "esxi01",
+      "note": "Fix NTP with two sources that do not sync from this host. Leave SSH alone until EX-014 expires. Do not invent a syslog target.",
+      "items": [
+        {
+          "slug": "esxi01--ESXI-80-000114",
+          "control": "ESXI-80-000114",
+          "title": "ESXi must forward logs to a site syslog collector.",
+          "cat": "II",
+          "clock": "due_soon",
+          "class": "blocked",
+          "days_overdue": 0
+        },
+        {
+          "slug": "esxi01--ESXI-80-000124",
+          "control": "ESXI-80-000124",
+          "title": "ESXi must synchronize time from an authoritative source.",
+          "cat": "II",
+          "clock": "on_track",
+          "class": "change-window",
+          "days_overdue": 0
+        }
+      ]
+    },
+    {
+      "host": "ad01.lab.local",
+      "host_short": "ad01",
+      "note": "This is the only domain controller. Do not reboot it in the same window as WSUS, and do not change Kerberos clock tolerance until ESXi time is fixed.",
+      "items": [
+        {
+          "slug": "ad01--WN22-DC-000060",
+          "control": "WN22-DC-000060",
+          "title": "Domain controller clock skew must stay within five minutes.",
+          "cat": "II",
+          "clock": "on_track",
+          "class": "do-not-automate",
+          "days_overdue": 0
+        }
+      ]
+    }
+  ],
+  "brief": {
+    "paragraphs": [
+      "Integration Lab, as of 27 Sep 2026. This is the note for the ISSO, written from the ledger rather than from memory.",
+      "4 items are past their clock. The oldest is RHEL-08-010370 on rhel-repo01, 44 days late. Set gpgcheck=1 on the lab repo files after the signing key is imported.",
+      "Regressed since the August scan: RHEL-08-030180 on rhel-mission01. A regression restarts the clock. It does not inherit credit for the months it was clean.",
+      "Closed since the last scan: RHEL-08-010550 on rhel-repo01.",
+      "An exception that expires is an open finding the next morning. WN22-00-000380 on wsus01 expired and is still open.",
+      "Backups: Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days. (wsus01) Last restore test was 140 days ago. Policy is 90 days. (esxi01)",
+      "Next bench visit is rhel-repo01: RHEL-08-010370, RHEL-08-010371, RHEL-08-020230. Import the lab GPG key, then set gpgcheck and localpkg_gpgcheck. Password length does not need a reboot. SSH root is already closed here."
+    ]
+  },
+  "handoff": {
+    "ready": false,
+    "gates": [
+      {
+        "id": "cat-i-clock",
+        "title": "No CAT I item is past its clock",
+        "status": "fail",
+        "detail": "RHEL-08-010370 on rhel-repo01, RHEL-08-010371 on rhel-mission01, RHEL-08-010371 on rhel-repo01"
+      },
+      {
+        "id": "expired-exceptions",
+        "title": "No expired exception is still open",
+        "status": "fail",
+        "detail": "WN22-00-000380 on wsus01"
+      },
+      {
+        "id": "regressions-reviewed",
+        "title": "Every regression has an engineer note",
+        "status": "fail",
+        "detail": "RHEL-08-030180 on rhel-mission01"
+      },
+      {
+        "id": "backups",
+        "title": "RPO and restore tests are inside policy",
+        "status": "fail",
+        "detail": "wsus01.lab.local, esxi01.lab.local"
+      },
+      {
+        "id": "runbooks",
+        "title": "Every enterprise service has a runbook",
+        "status": "fail",
+        "detail": "DHCP, vCenter"
+      },
+      {
+        "id": "hollow-pass",
+        "title": "No passing row depends on a host that is still failing",
+        "status": "fail",
+        "detail": "rhel-mission01 RHEL-08-010370"
+      },
+      {
+        "id": "unscanned",
+        "title": "Every inventoried host was in this period's scan",
+        "status": "fail",
+        "detail": "vcenter01.lab.local"
+      }
+    ]
+  },
+  "apply_gate": {
+    "decisions": [
+      {
+        "host": "ad01.lab.local",
+        "host_short": "ad01",
+        "control": "WN22-DC-000060",
+        "slug": "ad01--WN22-DC-000060",
+        "tag": null,
+        "action": "refuse",
+        "label": "Stopped",
+        "reason": "ad01 and esxi01 take time from each other. Fixing either side leaves the loop in place.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "esxi01.lab.local",
+        "host_short": "esxi01",
+        "control": "ESXI-80-000114",
+        "slug": "esxi01--ESXI-80-000114",
+        "tag": null,
+        "action": "refuse",
+        "label": "Stopped",
+        "reason": "A value written here would pass the check while the control is still false. An empty syslog target is an honest failure. Pointing it at a hostname that does not answer turns it into a false pass and you lose the logs.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "esxi01.lab.local",
+        "host_short": "esxi01",
+        "control": "ESXI-80-000124",
+        "slug": "esxi01--ESXI-80-000124",
+        "tag": null,
+        "action": "refuse",
+        "label": "Stopped",
+        "reason": "esxi01 and ad01 take time from each other. Fixing either side leaves the loop in place.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "esxi01.lab.local",
+        "host_short": "esxi01",
+        "control": "ESXI-80-000193",
+        "slug": "esxi01--ESXI-80-000193",
+        "tag": null,
+        "action": "refuse",
+        "label": "Stopped",
+        "reason": "EX-014 is signed through 2026-10-15. Closing this from a playbook would pass the scan and break that signature.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "wsus01.lab.local",
+        "host_short": "wsus01",
+        "control": "WN22-00-000380",
+        "slug": "wsus01--WN22-00-000380",
+        "tag": "smb1",
+        "action": "refuse",
+        "label": "Stopped",
+        "reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "wsus01.lab.local",
+        "host_short": "wsus01",
+        "control": "WN22-AC-000070",
+        "slug": "wsus01--WN22-AC-000070",
+        "tag": null,
+        "action": "refuse",
+        "label": "Stopped",
+        "reason": "This host takes the setting from Group Policy. A local edit loses to the next gpupdate.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "rhel-mission01.lab.local",
+        "host_short": "rhel-mission01",
+        "control": "RHEL-08-010370",
+        "slug": "rhel-mission01--RHEL-08-010370",
+        "tag": "gpgcheck",
+        "action": "hollow",
+        "label": "Pass is local",
+        "reason": "The mission host passes GPG checking and installs from the lab repo. The repo host still publishes packages with gpgcheck off, so this pass does not cover the packages.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "rhel-repo01.lab.local",
+        "host_short": "rhel-repo01",
+        "control": "RHEL-08-010370",
+        "slug": "rhel-repo01--RHEL-08-010370",
+        "tag": "gpgcheck",
+        "action": "probe",
+        "label": "Check first",
+        "reason": "The lab signing key is written down in the build notes and is not imported here. gpgcheck=1 before that key exists stops every install from this repo.",
+        "probe": "rpm -q gpg-pubkey",
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "rhel-repo01.lab.local",
+        "host_short": "rhel-repo01",
+        "control": "RHEL-08-010371",
+        "slug": "rhel-repo01--RHEL-08-010371",
+        "tag": "localpkg",
+        "action": "probe",
+        "label": "Check first",
+        "reason": "localpkg_gpgcheck fails closed the same way when the signing key was never imported.",
+        "probe": "rpm -q gpg-pubkey",
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "rhel-mission01.lab.local",
+        "host_short": "rhel-mission01",
+        "control": "CVE-2023-48795",
+        "slug": "rhel-mission01--CVE-2023-48795",
+        "tag": "openssh",
+        "action": "bundle",
+        "label": "One restart",
+        "reason": "These open rows restart sshd together: RHEL-08-010550, CVE-2024-6387, CVE-2023-48795. Doing one of them restarts the service before the others land.",
+        "probe": null,
+        "bundle": [
+          "RHEL-08-010550",
+          "CVE-2024-6387",
+          "CVE-2023-48795"
+        ],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "rhel-mission01.lab.local",
+        "host_short": "rhel-mission01",
+        "control": "CVE-2024-6387",
+        "slug": "rhel-mission01--CVE-2024-6387",
+        "tag": "openssh",
+        "action": "bundle",
+        "label": "One restart",
+        "reason": "These open rows restart sshd together: RHEL-08-010550, CVE-2024-6387, CVE-2023-48795. Doing one of them restarts the service before the others land.",
+        "probe": null,
+        "bundle": [
+          "RHEL-08-010550",
+          "CVE-2024-6387",
+          "CVE-2023-48795"
+        ],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "rhel-mission01.lab.local",
+        "host_short": "rhel-mission01",
+        "control": "RHEL-08-010550",
+        "slug": "rhel-mission01--RHEL-08-010550",
+        "tag": "ssh-root",
+        "action": "bundle",
+        "label": "One restart",
+        "reason": "These open rows restart sshd together: RHEL-08-010550, CVE-2024-6387, CVE-2023-48795. Doing one of them restarts the service before the others land.",
+        "probe": null,
+        "bundle": [
+          "RHEL-08-010550",
+          "CVE-2024-6387",
+          "CVE-2023-48795"
+        ],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "rhel-mission01.lab.local",
+        "host_short": "rhel-mission01",
+        "control": "RHEL-08-030180",
+        "slug": "rhel-mission01--RHEL-08-030180",
+        "tag": "audit",
+        "action": "window",
+        "label": "Someone there",
+        "reason": "This restarts a service or wants a reboot. An unattended run will not touch it. Someone has to be at the console.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "rhel-mission01.lab.local",
+        "host_short": "rhel-mission01",
+        "control": "RHEL-08-010371",
+        "slug": "rhel-mission01--RHEL-08-010371",
+        "tag": "localpkg",
+        "action": "allow",
+        "label": "Apply",
+        "reason": "No signature, dependency, or predecessor blocks this edit.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "rhel-repo01.lab.local",
+        "host_short": "rhel-repo01",
+        "control": "RHEL-08-020230",
+        "slug": "rhel-repo01--RHEL-08-020230",
+        "tag": "pwquality",
+        "action": "allow",
+        "label": "Apply",
+        "reason": "No signature, dependency, or predecessor blocks this edit.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      }
+    ],
+    "unscanned": [
+      "vcenter01.lab.local"
+    ],
+    "counts": {
+      "refuse": 6,
+      "hollow": 1,
+      "probe": 2,
+      "bundle": 3,
+      "window": 1,
+      "allow": 2
+    }
+  },
+  "stats": {
+    "open": 14,
+    "overdue": 4,
+    "due_soon": 4,
+    "excepted": 1,
+    "regressions": 1,
+    "closed_this_period": 1,
+    "by_cat": {
+      "I": {
+        "open": 4,
+        "overdue": 3
+      },
+      "II": {
+        "open": 10,
+        "overdue": 1
+      },
+      "III": {
+        "open": 0,
+        "overdue": 0
+      }
+    }
+  },
+  "sources": [
+    {
+      "file": "fixtures/lab/scans/ad01_2026-07-15.ckl",
+      "source": "ckl",
+      "observed_at": "2026-07-15"
+    },
+    {
+      "file": "fixtures/lab/scans/ad01_2026-08-20.ckl",
+      "source": "ckl",
+      "observed_at": "2026-08-20"
+    },
+    {
+      "file": "fixtures/lab/scans/ad01_2026-09-20.ckl",
+      "source": "ckl",
+      "observed_at": "2026-09-20"
+    },
+    {
+      "file": "fixtures/lab/scans/esxi01_2026-07-15.ckl",
+      "source": "ckl",
+      "observed_at": "2026-07-15"
+    },
+    {
+      "file": "fixtures/lab/scans/esxi01_2026-08-20.ckl",
+      "source": "ckl",
+      "observed_at": "2026-08-20"
+    },
+    {
+      "file": "fixtures/lab/scans/esxi01_2026-09-20.json",
+      "source": "vsphere",
+      "observed_at": "2026-09-20"
+    },
+    {
+      "file": "fixtures/lab/scans/rhel-mission01_2026-07-15.xml",
+      "source": "xccdf",
+      "observed_at": "2026-07-15"
+    },
+    {
+      "file": "fixtures/lab/scans/rhel-mission01_2026-08-20.xml",
+      "source": "xccdf",
+      "observed_at": "2026-08-20"
+    },
+    {
+      "file": "fixtures/lab/scans/rhel-mission01_2026-09-20.xml",
+      "source": "xccdf",
+      "observed_at": "2026-09-20"
+    },
+    {
+      "file": "fixtures/lab/scans/rhel-repo01_2026-07-15.xml",
+      "source": "xccdf",
+      "observed_at": "2026-07-15"
+    },
+    {
+      "file": "fixtures/lab/scans/rhel-repo01_2026-08-20.xml",
+      "source": "xccdf",
+      "observed_at": "2026-08-20"
+    },
+    {
+      "file": "fixtures/lab/scans/rhel-repo01_2026-09-20.xml",
+      "source": "xccdf",
+      "observed_at": "2026-09-20"
+    },
+    {
+      "file": "fixtures/lab/scans/wsus01_2026-07-15.ckl",
+      "source": "ckl",
+      "observed_at": "2026-07-15"
+    },
+    {
+      "file": "fixtures/lab/scans/wsus01_2026-08-20.ckl",
+      "source": "ckl",
+      "observed_at": "2026-08-20"
+    },
+    {
+      "file": "fixtures/lab/scans/wsus01_2026-09-20.ckl",
+      "source": "ckl",
+      "observed_at": "2026-09-20"
+    },
+    {
+      "file": "fixtures/lab/scans/acas_2026-08-20.csv",
+      "source": "acas",
+      "observed_at": "2026-08-20"
+    },
+    {
+      "file": "fixtures/lab/scans/acas_2026-09-05.csv",
+      "source": "acas",
+      "observed_at": "2026-09-05"
+    },
+    {
+      "file": "fixtures/lab/scans/acas_2026-09-20.csv",
+      "source": "acas",
+      "observed_at": "2026-09-20"
+    }
+  ]
+}

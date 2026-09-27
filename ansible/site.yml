@@ -1,0 +1,14 @@
+---
+# Dry run of a control the gate allows. Refused controls and missing predecessor checks stop the play:
+#   ansible-playbook -i ansible/inventory/lab.ini ansible/site.yml --check --diff --limit rhel-repo01.lab.local --tags pwquality
+# gpgcheck on the repo host runs `rpm -q gpg-pubkey` even under --check, and stops if no key is imported.
+# A service restart needs -e findings_one_window=true and someone at the console.
+# Put the saved files back (does not restart sshd):
+#   ansible-playbook -i ansible/inventory/lab.ini ansible/revert.yml --limit rhel-repo01.lab.local
+- name: RHEL controls marked safe to automate
+  hosts: rhel
+  become: true
+  vars:
+    findings_gate_file: "{{ playbook_dir }}/generated/apply-gate.json"
+  roles:
+    - rhel_baseline

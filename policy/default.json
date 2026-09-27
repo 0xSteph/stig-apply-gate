@@ -1,0 +1,13 @@
+{
+  "sla_days": {
+    "I": 30,
+    "II": 90,
+    "III": 365
+  },
+  "due_soon_days": 21,
+  "regression_restarts_clock": true,
+  "exception_grace_days": 0,
+  "cvss_cat_i_min": 7.0,
+  "cvss_cat_ii_min": 4.0,
+  "notes": "These clocks match a common ISSM policy (CAT I 30, CAT II 90, CAT III 365). Replace them with the timelines in the system security plan before using this register on a real package. CVSS cutovers apply only to vulnerability exports, not to STIG severities."
+}

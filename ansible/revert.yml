@@ -1,0 +1,77 @@
+---
+# Puts back the files roles/rhel_baseline saved on the last real run.
+# Does not restart sshd unless you pass --tags restart-sshd.
+# Does not remove the audit package.
+# A dry run of site.yml (--check) does not write a backup, because it changes nothing.
+- name: Restore files saved before the last baseline run
+  hosts: rhel
+  become: true
+  tasks:
+    - name: Look for the latest backup marker
+      ansible.builtin.stat:
+        path: /var/backups/findings-register/latest-path.txt
+      register: latest_marker
+      tags: [always]
+
+    - name: Stop when this host has no backup
+      ansible.builtin.fail:
+        msg: >-
+          No backup is recorded at /var/backups/findings-register/latest-path.txt.
+          A dry run (--check) does not write one, because it does not change the host.
+          Run the baseline play for real before you can revert it, or restore from your own copy.
+      when: not latest_marker.stat.exists
+      tags: [always]
+
+    - name: Read the backup path
+      ansible.builtin.slurp:
+        src: /var/backups/findings-register/latest-path.txt
+      register: latest_raw
+      tags: [always]
+
+    - name: Read the manifest
+      ansible.builtin.slurp:
+        src: "{{ (latest_raw.content | b64decode | trim) }}/manifest.json"
+      register: manifest_raw
+      tags: [always]
+
+    - name: Remember what to restore
+      ansible.builtin.set_fact:
+        baseline_backup_dir: "{{ latest_raw.content | b64decode | trim }}"
+        baseline_manifest: "{{ (manifest_raw.content | b64decode) | from_json }}"
+      tags: [always]
+
+    - name: Put saved files back
+      ansible.builtin.copy:
+        src: "{{ baseline_backup_dir }}/{{ item | basename }}"
+        dest: "{{ item }}"
+        remote_src: true
+        validate: "{{ '/usr/sbin/sshd -t -f %s' if item == '/etc/ssh/sshd_config' else omit }}"
+      loop: "{{ baseline_manifest.present }}"
+      loop_control:
+        label: "{{ item }}"
+      tags: [always]
+
+    - name: Remove config files that did not exist before the run
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ baseline_manifest.absent }}"
+      loop_control:
+        label: "{{ item }}"
+      tags: [always]
+
+    - name: Leave sshd running as it is
+      ansible.builtin.debug:
+        msg: >-
+          Saved files were restored. sshd was not restarted.
+          If sshd was never restarted after the change, the running daemon still has the previous settings.
+          If sshd was already restarted and you are on the console, restart it only after you read the restored file:
+          ansible-playbook -i ansible/inventory/lab.ini ansible/revert.yml --limit {{ inventory_hostname }} --tags restart-sshd.
+          The audit package was not removed.
+      tags: [always]
+
+    - name: Restart sshd only when asked
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
+      tags: [restart-sshd, never]

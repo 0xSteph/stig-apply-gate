@@ -1,0 +1,3 @@
+Plugin ID,CVE,CVSS,Risk,Host,Name,Synopsis
+187315,CVE-2023-48795,5.9,Medium,rhel-mission01.lab.local,SSH prefix truncation can weaken the handshake.,SSH prefix truncation can weaken the handshake.
+201194,CVE-2024-6387,8.1,High,rhel-mission01.lab.local,OpenSSH signal-handler race during authentication.,OpenSSH signal-handler race during authentication.

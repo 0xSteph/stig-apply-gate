@@ -1,0 +1,10 @@
+# .gitignore
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
+dist/
+agent-tools/
+
+web/node_modules/
+web/.next/

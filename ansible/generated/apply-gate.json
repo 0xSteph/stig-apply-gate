@@ -1,0 +1,214 @@
+{
+  "decisions": [
+    {
+      "host": "ad01.lab.local",
+      "host_short": "ad01",
+      "control": "WN22-DC-000060",
+      "slug": "ad01--WN22-DC-000060",
+      "tag": null,
+      "action": "refuse",
+      "label": "Stopped",
+      "reason": "ad01 and esxi01 take time from each other. Fixing either side leaves the loop in place.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "esxi01.lab.local",
+      "host_short": "esxi01",
+      "control": "ESXI-80-000114",
+      "slug": "esxi01--ESXI-80-000114",
+      "tag": null,
+      "action": "refuse",
+      "label": "Stopped",
+      "reason": "A value written here would pass the check while the control is still false. An empty syslog target is an honest failure. Pointing it at a hostname that does not answer turns it into a false pass and you lose the logs.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "esxi01.lab.local",
+      "host_short": "esxi01",
+      "control": "ESXI-80-000124",
+      "slug": "esxi01--ESXI-80-000124",
+      "tag": null,
+      "action": "refuse",
+      "label": "Stopped",
+      "reason": "esxi01 and ad01 take time from each other. Fixing either side leaves the loop in place.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "esxi01.lab.local",
+      "host_short": "esxi01",
+      "control": "ESXI-80-000193",
+      "slug": "esxi01--ESXI-80-000193",
+      "tag": null,
+      "action": "refuse",
+      "label": "Stopped",
+      "reason": "EX-014 is signed through 2026-10-15. Closing this from a playbook would pass the scan and break that signature.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "wsus01.lab.local",
+      "host_short": "wsus01",
+      "control": "WN22-00-000380",
+      "slug": "wsus01--WN22-00-000380",
+      "tag": "smb1",
+      "action": "refuse",
+      "label": "Stopped",
+      "reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "wsus01.lab.local",
+      "host_short": "wsus01",
+      "control": "WN22-AC-000070",
+      "slug": "wsus01--WN22-AC-000070",
+      "tag": null,
+      "action": "refuse",
+      "label": "Stopped",
+      "reason": "This host takes the setting from Group Policy. A local edit loses to the next gpupdate.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "control": "RHEL-08-010370",
+      "slug": "rhel-mission01--RHEL-08-010370",
+      "tag": "gpgcheck",
+      "action": "hollow",
+      "label": "Pass is local",
+      "reason": "The mission host passes GPG checking and installs from the lab repo. The repo host still publishes packages with gpgcheck off, so this pass does not cover the packages.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "control": "RHEL-08-010370",
+      "slug": "rhel-repo01--RHEL-08-010370",
+      "tag": "gpgcheck",
+      "action": "probe",
+      "label": "Check first",
+      "reason": "The lab signing key is written down in the build notes and is not imported here. gpgcheck=1 before that key exists stops every install from this repo.",
+      "probe": "rpm -q gpg-pubkey",
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "control": "RHEL-08-010371",
+      "slug": "rhel-repo01--RHEL-08-010371",
+      "tag": "localpkg",
+      "action": "probe",
+      "label": "Check first",
+      "reason": "localpkg_gpgcheck fails closed the same way when the signing key was never imported.",
+      "probe": "rpm -q gpg-pubkey",
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "control": "CVE-2023-48795",
+      "slug": "rhel-mission01--CVE-2023-48795",
+      "tag": "openssh",
+      "action": "bundle",
+      "label": "One restart",
+      "reason": "These open rows restart sshd together: RHEL-08-010550, CVE-2024-6387, CVE-2023-48795. Doing one of them restarts the service before the others land.",
+      "probe": null,
+      "bundle": [
+        "RHEL-08-010550",
+        "CVE-2024-6387",
+        "CVE-2023-48795"
+      ],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "control": "CVE-2024-6387",
+      "slug": "rhel-mission01--CVE-2024-6387",
+      "tag": "openssh",
+      "action": "bundle",
+      "label": "One restart",
+      "reason": "These open rows restart sshd together: RHEL-08-010550, CVE-2024-6387, CVE-2023-48795. Doing one of them restarts the service before the others land.",
+      "probe": null,
+      "bundle": [
+        "RHEL-08-010550",
+        "CVE-2024-6387",
+        "CVE-2023-48795"
+      ],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "control": "RHEL-08-010550",
+      "slug": "rhel-mission01--RHEL-08-010550",
+      "tag": "ssh-root",
+      "action": "bundle",
+      "label": "One restart",
+      "reason": "These open rows restart sshd together: RHEL-08-010550, CVE-2024-6387, CVE-2023-48795. Doing one of them restarts the service before the others land.",
+      "probe": null,
+      "bundle": [
+        "RHEL-08-010550",
+        "CVE-2024-6387",
+        "CVE-2023-48795"
+      ],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "control": "RHEL-08-030180",
+      "slug": "rhel-mission01--RHEL-08-030180",
+      "tag": "audit",
+      "action": "window",
+      "label": "Someone there",
+      "reason": "This restarts a service or wants a reboot. An unattended run will not touch it. Someone has to be at the console.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "control": "RHEL-08-010371",
+      "slug": "rhel-mission01--RHEL-08-010371",
+      "tag": "localpkg",
+      "action": "allow",
+      "label": "Apply",
+      "reason": "No signature, dependency, or predecessor blocks this edit.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "control": "RHEL-08-020230",
+      "slug": "rhel-repo01--RHEL-08-020230",
+      "tag": "pwquality",
+      "action": "allow",
+      "label": "Apply",
+      "reason": "No signature, dependency, or predecessor blocks this edit.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    }
+  ],
+  "unscanned": [
+    "vcenter01.lab.local"
+  ]
+}

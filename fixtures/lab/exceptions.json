@@ -1,0 +1,41 @@
+[
+  {
+    "id": "EX-014",
+    "host": "esxi01.lab.local",
+    "control": "ESXI-80-000193",
+    "status": "approved",
+    "rationale": "Break-glass SSH for the integration campaign. Day-to-day administration stays on vCenter. SSH is limited to the jump host.",
+    "compensating": "Lockdown stays Normal. SSH is limited to the jump-host subnet. Sessions are recorded on the admin workstation.",
+    "approver": "ISSO",
+    "approver_name": "A. Okonkwo",
+    "approved_on": "2026-08-28",
+    "expires": "2026-10-15",
+    "ticket": "CHG-1044"
+  },
+  {
+    "id": "EX-007",
+    "host": "wsus01.lab.local",
+    "control": "WN22-00-000380",
+    "status": "approved",
+    "rationale": "The payload ICD dropbox still spoke SMBv1. The software drop that removes that dependency finished on 1 Sep.",
+    "compensating": "The share was limited to the integration VLAN and SMB signing stayed required. No other host had the feature installed.",
+    "approver": "ISSO",
+    "approver_name": "A. Okonkwo",
+    "approved_on": "2026-07-20",
+    "expires": "2026-09-01",
+    "ticket": "CHG-0988"
+  },
+  {
+    "id": "EX-021",
+    "host": "esxi01.lab.local",
+    "control": "ESXI-80-000114",
+    "status": "pending",
+    "rationale": "The lab has no syslog collector. Setting logHost to a name that does not answer would turn a real gap into a false pass.",
+    "compensating": "Host logs stay on ESXi. Retention is checked weekly until a collector exists.",
+    "approver": "ISSO",
+    "approver_name": "",
+    "approved_on": "",
+    "expires": "2026-12-01",
+    "ticket": "CHG-1102"
+  }
+]

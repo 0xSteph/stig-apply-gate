@@ -1,0 +1,3 @@
+---
+baseline_minlen: 15
+permit_root_login: "no"

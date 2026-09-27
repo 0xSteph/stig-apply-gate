@@ -1,0 +1,14 @@
+{
+  "host": "esxi01.lab.local",
+  "observed_at": "2026-09-20",
+  "lockdown_mode": "lockdownNormal",
+  "ssh_running": true,
+  "ntp_running": true,
+  "ntp_servers": [
+    "ad01.lab.local"
+  ],
+  "ntp_circular_with": [
+    "ad01.lab.local"
+  ],
+  "syslog_log_host": ""
+}

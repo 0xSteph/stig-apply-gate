@@ -1,0 +1,14 @@
+[project]
+name = "findings-register"
+version = "0.1.0"
+description = "Offline findings register for Windows, RHEL, and vSphere baselines"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+findings = "findings.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
