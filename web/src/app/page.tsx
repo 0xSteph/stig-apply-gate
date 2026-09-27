@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Shell } from "@/components/shell";
 import { CatMark, ClockMark, ClassMark } from "@/components/marks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LabPlate } from "@/components/plates";
 import { formatDay, ledger } from "@/lib/ledger";
 
 export default function HomePage() {
@@ -20,6 +21,7 @@ export default function HomePage() {
       </p>
       <h1 className="font-heading mt-2 text-4xl text-[#f3ead2] sm:text-5xl">{site.name}</h1>
       <p className="mt-3 max-w-3xl text-base leading-relaxed text-muted-foreground">{site.description}</p>
+      <LabPlate />
 
       <div className="mt-8 grid gap-4 lg:grid-cols-[1.5fr_0.9fr]">
         <Card>

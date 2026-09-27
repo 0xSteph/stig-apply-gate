@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 680" role="img" aria-labelledby="plate1Title plate1Desc">
+  <title id="plate1Title">Plate 1. Integration Lab</title>
+  <desc id="plate1Desc">Six lab hosts. The domain controller and ESXi take time from each other. WSUS is stopped for backup. The repository is waiting on a signing key. The mission host gets one sshd restart.</desc>
+  <rect width="1120" height="680" fill="#efe6d2"/>
+  <rect x="18" y="18" width="1084" height="644" fill="none" stroke="#1c2418" stroke-width="1.5"/>
+  <rect x="24" y="24" width="1072" height="632" fill="none" stroke="#1c2418" stroke-width="0.5"/>
+  <path d="M36 36 h10 M36 36 v10 M1084 36 h-10 M1084 36 v10 M36 644 h10 M36 644 v-10 M1084 644 h-10 M1084 644 v-10" fill="none" stroke="#1c2418" stroke-width="1"/>
+
+  <text x="44" y="62" fill="#7a5b20" font-family="Georgia, 'Iowan Old Style', Palatino, serif" font-size="13" letter-spacing="3">PLATE 1</text>
+  <text x="44" y="98" fill="#1c2418" font-family="Georgia, 'Iowan Old Style', Palatino, serif" font-size="36">Integration Lab</text>
+  <text x="1076" y="62" fill="#5c5648" font-family="Georgia, Palatino, serif" font-size="13" text-anchor="end">sample clock 27 Sep 2026</text>
+  <text x="1076" y="84" fill="#5c5648" font-family="Georgia, Palatino, serif" font-size="13" text-anchor="end">unclassified stand-in</text>
+  <text x="44" y="122" fill="#5c5648" font-family="Georgia, Palatino, serif" font-size="14">A ground site drawn from the lab record. The playbook does not get a pencil until the gate says so.</text>
+
+  <g font-family="Georgia, Palatino, serif">
+    <rect x="44" y="150" width="300" height="176" fill="#f7f1e4" stroke="#1c2418" stroke-width="1.25"/>
+    <text x="60" y="180" fill="#1c2418" font-size="20">ad01</text>
+    <text x="60" y="202" fill="#5c5648" font-family="ui-monospace, 'Courier New', monospace" font-size="12">10.8.1.10</text>
+    <text x="60" y="230" fill="#1c2418" font-size="15">Domain controller</text>
+    <text x="60" y="250" fill="#1c2418" font-size="15">DNS and DHCP</text>
+    <line x1="60" y1="272" x2="324" y2="272" stroke="#cfc4aa"/>
+    <text x="60" y="300" fill="#8f2f1c" font-size="14">Stop. Time loop with ESXi.</text>
+
+    <rect x="408" y="150" width="300" height="176" fill="#f7f1e4" stroke="#1c2418" stroke-width="1.25"/>
+    <text x="424" y="180" fill="#1c2418" font-size="20">esxi01</text>
+    <text x="424" y="202" fill="#5c5648" font-family="ui-monospace, 'Courier New', monospace" font-size="12">10.8.1.30</text>
+    <text x="424" y="230" fill="#1c2418" font-size="15">Hypervisor</text>
+    <text x="424" y="250" fill="#1c2418" font-size="15">vSphere host</text>
+    <line x1="424" y1="272" x2="688" y2="272" stroke="#cfc4aa"/>
+    <text x="424" y="300" fill="#8f2f1c" font-size="14">Stop. SSH exception signed.</text>
+
+    <rect x="772" y="150" width="300" height="176" fill="#f7f1e4" stroke="#1c2418" stroke-width="1.25"/>
+    <text x="788" y="180" fill="#1c2418" font-size="20">vcenter01</text>
+    <text x="788" y="202" fill="#5c5648" font-family="ui-monospace, 'Courier New', monospace" font-size="12">10.8.1.31</text>
+    <text x="788" y="230" fill="#1c2418" font-size="15">vCenter Server</text>
+    <text x="788" y="250" fill="#1c2418" font-size="15">No findings in the sample</text>
+    <line x1="788" y1="272" x2="1052" y2="272" stroke="#cfc4aa"/>
+    <text x="788" y="300" fill="#5c5648" font-size="14">No scan this period.</text>
+
+    <rect x="44" y="390" width="300" height="176" fill="#f7f1e4" stroke="#1c2418" stroke-width="1.25"/>
+    <text x="60" y="420" fill="#1c2418" font-size="20">wsus01</text>
+    <text x="60" y="442" fill="#5c5648" font-family="ui-monospace, 'Courier New', monospace" font-size="12">10.8.1.11</text>
+    <text x="60" y="470" fill="#1c2418" font-size="15">WSUS and patch store</text>
+    <text x="60" y="490" fill="#1c2418" font-size="15">SMBv1 still installed</text>
+    <line x1="60" y1="512" x2="324" y2="512" stroke="#cfc4aa"/>
+    <text x="60" y="540" fill="#8f2f1c" font-size="14">Stop. Backup outside policy.</text>
+
+    <rect x="408" y="390" width="300" height="176" fill="#f7f1e4" stroke="#1c2418" stroke-width="1.25"/>
+    <text x="424" y="420" fill="#1c2418" font-size="20">rhel-repo01</text>
+    <text x="424" y="442" fill="#5c5648" font-family="ui-monospace, 'Courier New', monospace" font-size="12">10.8.1.20</text>
+    <text x="424" y="470" fill="#1c2418" font-size="15">DNF repository</text>
+    <text x="424" y="490" fill="#1c2418" font-size="15">Oldest open CAT I</text>
+    <line x1="424" y1="512" x2="688" y2="512" stroke="#cfc4aa"/>
+    <text x="424" y="540" fill="#7a5b20" font-size="14">Check the signing key first.</text>
+
+    <rect x="772" y="390" width="300" height="176" fill="#f7f1e4" stroke="#1c2418" stroke-width="1.25"/>
+    <text x="788" y="420" fill="#1c2418" font-size="20">rhel-mission01</text>
+    <text x="788" y="442" fill="#5c5648" font-family="ui-monospace, 'Courier New', monospace" font-size="12">10.8.1.21</text>
+    <text x="788" y="470" fill="#1c2418" font-size="15">Mission processing</text>
+    <text x="788" y="490" fill="#1c2418" font-size="15">OpenSSH still open</text>
+    <line x1="788" y1="512" x2="1052" y2="512" stroke="#cfc4aa"/>
+    <text x="788" y="540" fill="#2d4a32" font-size="14">One sshd restart. Console.</text>
+  </g>
+
+  <g fill="none" stroke="#8f2f1c" stroke-width="1.6">
+    <path class="loop-arc" d="M350 198 C376 158 376 158 402 198"/>
+    <path class="loop-arc" d="M402 252 C376 292 376 292 350 252"/>
+  </g>
+  <text x="376" y="232" fill="#8f2f1c" font-family="Georgia, Palatino, serif" font-size="12" text-anchor="middle">time</text>
+
+  <g fill="none" stroke="#7a5b20" stroke-width="1.5">
+    <path d="M716 478 H764"/>
+    <path d="M756 472 l8 6 l-8 6" fill="none"/>
+  </g>
+  <text x="740" y="468" fill="#7a5b20" font-family="Georgia, Palatino, serif" font-size="11" text-anchor="middle">packages</text>
+
+  <text x="44" y="612" fill="#5c5648" font-family="Georgia, Palatino, serif" font-size="13">Operations hosts are not on this plate. Prove the change here, then schedule the window.</text>
+  <text x="1076" y="640" fill="#7a5b20" font-family="Georgia, Palatino, serif" font-size="12" text-anchor="end" letter-spacing="2">FIG. 1</text>
+</svg>

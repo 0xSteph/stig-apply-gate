@@ -1,3 +1,4 @@
+import { GatePlate } from "@/components/plates";
 import { Shell } from "@/components/shell";
 
 export default function MethodPage() {
@@ -50,6 +51,7 @@ export default function MethodPage() {
             A stock STIG role ships the controls turned on. Someone is supposed to remember which ones to skip. This
             register writes an apply gate, and the play reads it before it edits a file.
           </p>
+          <GatePlate />
           <ul className="list-disc space-y-2 pl-5">
             <li>A signed exception still in force. The stop lifts the day after it expires.</li>
             <li>Two hosts taking time from each other. Fixing either side leaves the loop.</li>

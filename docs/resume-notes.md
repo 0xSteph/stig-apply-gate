@@ -8,6 +8,8 @@ Findings register for an integration lab that stands in for a small ground site:
 
 It does not scan a host and it does not log into one. Clocks, exceptions, and the apply gate are computed from the files. There is no model call.
 
+Figures, for the README and the register: `docs/figures/lab-site.svg` (plate 1, the six hosts) and `docs/figures/gate.svg` (plate 2, lab versus operations). On the site, the time marks between the domain controller and ESXi move. They are drawing plates, not a product screenshot.
+
 ## What to say it shows
 
 - Maintained hardened-baseline judgment across Windows Server, RHEL, and VMware, including which fixes are a GPO, a change window, or a false pass.

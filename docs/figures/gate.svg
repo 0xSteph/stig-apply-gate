@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 360" role="img" aria-labelledby="plate2Title plate2Desc">
+  <title id="plate2Title">Plate 2. Where a change is allowed to go</title>
+  <desc id="plate2Desc">Scanner exports enter the register. The apply gate may release a change into the integration lab. An operations host stays refused.</desc>
+  <rect width="1120" height="360" fill="#efe6d2"/>
+  <rect x="18" y="18" width="1084" height="324" fill="none" stroke="#1c2418" stroke-width="1.5"/>
+  <rect x="24" y="24" width="1072" height="312" fill="none" stroke="#1c2418" stroke-width="0.5"/>
+  <path d="M36 36 h10 M36 36 v10 M1084 36 h-10 M1084 36 v10 M36 324 h10 M36 324 v-10 M1084 324 h-10 M1084 324 v-10" fill="none" stroke="#1c2418" stroke-width="1"/>
+
+  <text x="44" y="62" fill="#7a5b20" font-family="Georgia, 'Iowan Old Style', Palatino, serif" font-size="13" letter-spacing="3">PLATE 2</text>
+  <text x="44" y="96" fill="#1c2418" font-family="Georgia, 'Iowan Old Style', Palatino, serif" font-size="32">Where a change is allowed to go</text>
+  <text x="1076" y="328" fill="#7a5b20" font-family="Georgia, Palatino, serif" font-size="12" text-anchor="end" letter-spacing="2">FIG. 2</text>
+
+  <g font-family="Georgia, Palatino, serif">
+    <rect x="44" y="124" width="250" height="160" fill="#f7f1e4" stroke="#1c2418"/>
+    <text x="60" y="156" fill="#1c2418" font-size="18">Exports</text>
+    <text x="60" y="186" fill="#5c5648" font-size="14">XCCDF and checklists</text>
+    <text x="60" y="208" fill="#5c5648" font-size="14">ACAS or Nessus CSV</text>
+    <text x="60" y="230" fill="#5c5648" font-size="14">ESXi snapshot</text>
+    <text x="60" y="260" fill="#1c2418" font-size="13">Already on disk. No scan.</text>
+
+    <rect x="354" y="124" width="250" height="160" fill="#f7f1e4" stroke="#1c2418"/>
+    <text x="370" y="156" fill="#1c2418" font-size="18">Register</text>
+    <text x="370" y="186" fill="#5c5648" font-size="14">CAT clocks</text>
+    <text x="370" y="208" fill="#5c5648" font-size="14">Exceptions and backups</text>
+    <text x="370" y="230" fill="#5c5648" font-size="14">Drift since last scan</text>
+    <text x="370" y="260" fill="#1c2418" font-size="13">Dates in the files only.</text>
+
+    <rect x="664" y="124" width="408" height="160" fill="#f7f1e4" stroke="#1c2418"/>
+    <text x="680" y="156" fill="#1c2418" font-size="18">Apply gate</text>
+    <text x="680" y="188" fill="#2d4a32" font-size="15">Lab. Try it here, after a dry run.</text>
+    <text x="680" y="214" fill="#8f2f1c" font-size="15">Operations. Refused.</text>
+    <text x="680" y="248" fill="#5c5648" font-size="14">A window is the scheduled apply,</text>
+    <text x="680" y="268" fill="#5c5648" font-size="14">with someone there and a way back.</text>
+  </g>
+
+  <g fill="none" stroke="#1c2418" stroke-width="1.25">
+    <path d="M294 204 H346"/>
+    <path d="M338 198 l8 6 l-8 6"/>
+    <path d="M604 204 H656"/>
+    <path d="M648 198 l8 6 l-8 6"/>
+  </g>
+</svg>

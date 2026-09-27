@@ -6,6 +6,10 @@ Shops already do this in Excel, eMASS, ACAS, SCC, and Evaluate-STIG. This does n
 
 There is no model and no network call. The result is the rule ids and the dates in the files.
 
+![Plate 1. Integration Lab. Stops are marked on the hosts. The time loop sits between the domain controller and ESXi.](docs/figures/lab-site.svg)
+
+![Plate 2. Exports go into the register. The gate may release a change into the lab. Operations stays refused.](docs/figures/gate.svg)
+
 The part that is not another tracker: `ansible/generated/apply-gate.json`. The playbook reads it before editing a file and stops when a signed exception is still in force, two hosts take time from each other, a disruptive change lands on a backup that missed its policy, a pass depends on another host that is still failing, a predecessor check such as `rpm -q gpg-pubkey` fails, or one restart would land before the rest of that service's changes. A host with no scan this period is not treated as clean. The stop for a signature lifts the day after the exception expires.
 
 Integration Lab, the sample, is an unclassified stand-in for a small ground site: one domain controller (DNS and DHCP), WSUS, a RHEL 8 repository, one mission host, and vSphere. The scan files are synthetic. Rule identifiers that include a vulnerability number are public STIG identifiers. Titles and results were written for this lab. The register does not redistribute benchmark text.
