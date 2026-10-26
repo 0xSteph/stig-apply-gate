@@ -2552,92 +2552,128 @@
     {
       "file": "fixtures/lab/scans/ad01_2026-07-15.ckl",
       "source": "ckl",
-      "observed_at": "2026-07-15"
+      "observed_at": "2026-07-15",
+      "sha256": "43267a2c02ab2cab1918d04183a7da564f441fc2fb01fa89a47a2083f03638ea",
+      "bytes": 3393
     },
     {
       "file": "fixtures/lab/scans/ad01_2026-08-20.ckl",
       "source": "ckl",
-      "observed_at": "2026-08-20"
+      "observed_at": "2026-08-20",
+      "sha256": "d4be6e04084101f3a4b38365b8da76668a126e2f314981d905ca5cab1672fe43",
+      "bytes": 3408
     },
     {
       "file": "fixtures/lab/scans/ad01_2026-09-20.ckl",
       "source": "ckl",
-      "observed_at": "2026-09-20"
+      "observed_at": "2026-09-20",
+      "sha256": "6c65d5225b27efe7cead7087c1c9f3e9be2518bab349073c659a0e1eda2d846f",
+      "bytes": 3492
     },
     {
       "file": "fixtures/lab/scans/esxi01_2026-07-15.ckl",
       "source": "ckl",
-      "observed_at": "2026-07-15"
+      "observed_at": "2026-07-15",
+      "sha256": "1627a649f8e4a4626ed1e794a953dd6ce0d06f5b0f5832ee4f2c2d38c42ff44e",
+      "bytes": 5089
     },
     {
       "file": "fixtures/lab/scans/esxi01_2026-08-20.ckl",
       "source": "ckl",
-      "observed_at": "2026-08-20"
+      "observed_at": "2026-08-20",
+      "sha256": "db98849fc92097808cad70addcf04d49e31f6e468fec89925586fb6e5aa6cd0b",
+      "bytes": 5135
     },
     {
       "file": "fixtures/lab/scans/esxi01_2026-09-20.json",
       "source": "vsphere",
-      "observed_at": "2026-09-20"
+      "observed_at": "2026-09-20",
+      "sha256": "4c805b23531b72b74bc793944b504502b20c64f8a507f116f9c233f5897a378c",
+      "bytes": 268
     },
     {
       "file": "fixtures/lab/scans/rhel-mission01_2026-07-15.xml",
       "source": "xccdf",
-      "observed_at": "2026-07-15"
+      "observed_at": "2026-07-15",
+      "sha256": "b21c5f01e65a3a874da9f7c204f4ff9e2f32895e6dc3e9347314e4b3760e68fc",
+      "bytes": 3199
     },
     {
       "file": "fixtures/lab/scans/rhel-mission01_2026-08-20.xml",
       "source": "xccdf",
-      "observed_at": "2026-08-20"
+      "observed_at": "2026-08-20",
+      "sha256": "a3d1bb821b2874863c984032675ddd004345c141355a6a3fcba3c7fd7c423320",
+      "bytes": 3283
     },
     {
       "file": "fixtures/lab/scans/rhel-mission01_2026-09-20.xml",
       "source": "xccdf",
-      "observed_at": "2026-09-20"
+      "observed_at": "2026-09-20",
+      "sha256": "d5596fc731506041d32b59d1e785c50d0e5569cb997027320b36274235c2ef24",
+      "bytes": 3435
     },
     {
       "file": "fixtures/lab/scans/rhel-repo01_2026-07-15.xml",
       "source": "xccdf",
-      "observed_at": "2026-07-15"
+      "observed_at": "2026-07-15",
+      "sha256": "9688a5682bd1331a40ae9c90596dd309c3a42aa18cc9d7868880689d75821720",
+      "bytes": 3245
     },
     {
       "file": "fixtures/lab/scans/rhel-repo01_2026-08-20.xml",
       "source": "xccdf",
-      "observed_at": "2026-08-20"
+      "observed_at": "2026-08-20",
+      "sha256": "106b111333785db9beae8773b96cb2d1a85353080a4a22f52089527255357aea",
+      "bytes": 3266
     },
     {
       "file": "fixtures/lab/scans/rhel-repo01_2026-09-20.xml",
       "source": "xccdf",
-      "observed_at": "2026-09-20"
+      "observed_at": "2026-09-20",
+      "sha256": "41ca078b083bf369ec6a0f41de35483f29694b4f637149b3553f60e278a98199",
+      "bytes": 3422
     },
     {
       "file": "fixtures/lab/scans/wsus01_2026-07-15.ckl",
       "source": "ckl",
-      "observed_at": "2026-07-15"
+      "observed_at": "2026-07-15",
+      "sha256": "a57031338cdcd1405b403ebed5e31b59cd56bfb0b48d5a46b0dce75eb2e1858e",
+      "bytes": 2599
     },
     {
       "file": "fixtures/lab/scans/wsus01_2026-08-20.ckl",
       "source": "ckl",
-      "observed_at": "2026-08-20"
+      "observed_at": "2026-08-20",
+      "sha256": "0baaad429044ba17d06d8e6512dfdb463d36e64b1d4d475da09d0231ef442a69",
+      "bytes": 2506
     },
     {
       "file": "fixtures/lab/scans/wsus01_2026-09-20.ckl",
       "source": "ckl",
-      "observed_at": "2026-09-20"
+      "observed_at": "2026-09-20",
+      "sha256": "ffa71b50dc7e65ff7cf77dc29d4e6911f8f474ee3719e056ae3060320e1f89cb",
+      "bytes": 2701
     },
     {
       "file": "fixtures/lab/scans/acas_2026-08-20.csv",
       "source": "acas",
-      "observed_at": "2026-08-20"
+      "observed_at": "2026-08-20",
+      "sha256": "0d8144698f425aea602704e16b991bb42a69cef73471f4a1653d58acc62380f7",
+      "bytes": 197
     },
     {
       "file": "fixtures/lab/scans/acas_2026-09-05.csv",
       "source": "acas",
-      "observed_at": "2026-09-05"
+      "observed_at": "2026-09-05",
+      "sha256": "f6ad6809ba7a26472a16f8402b397af869f37baae841e95d1288063f08af2d40",
+      "bytes": 354
     },
     {
       "file": "fixtures/lab/scans/acas_2026-09-20.csv",
       "source": "acas",
-      "observed_at": "2026-09-20"
+      "observed_at": "2026-09-20",
+      "sha256": "f6ad6809ba7a26472a16f8402b397af869f37baae841e95d1288063f08af2d40",
+      "bytes": 354
     }
   ]
 }

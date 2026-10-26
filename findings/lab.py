@@ -198,7 +198,8 @@ def write_lab_scans(root: Path) -> None:
         "ntp_circular_with": ["ad01.lab.local"],
         "syslog_log_host": "",
     }
-    (root / "esxi01_2026-09-20.json").write_text(json.dumps(snapshot, indent=2) + "\n", encoding="utf-8")
+    # The lab exports are hashed into the ledger, so every writer here emits the same bytes on every OS.
+    (root / "esxi01_2026-09-20.json").write_text(json.dumps(snapshot, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def _pairs(rows: list[tuple]) -> list[tuple[str, str]]:
@@ -255,7 +256,8 @@ def _write_xccdf(path: Path, host: str, day: str, benchmark_title: str, rules: d
             comment_el = ET.SubElement(rule_result, f"{{{NS}}}message")
             comment_el.text = comment
     ET.indent(benchmark, space="  ")
-    ET.ElementTree(benchmark).write(path, encoding="utf-8", xml_declaration=True)
+    with path.open("wb") as handle:
+        ET.ElementTree(benchmark).write(handle, encoding="utf-8", xml_declaration=True)
 
 
 def _write_ckl(path: Path, host: str, day: str, stig_title: str, rules: dict, rows: list[tuple]) -> None:
@@ -291,12 +293,13 @@ def _write_ckl(path: Path, host: str, day: str, stig_title: str, rules: dict, ro
         justification = ET.SubElement(vuln, "SEVERITY_JUSTIFICATION")
         justification.text = ""
     ET.indent(checklist, space="  ")
-    ET.ElementTree(checklist).write(path, encoding="utf-8", xml_declaration=True)
+    with path.open("wb") as handle:
+        ET.ElementTree(checklist).write(handle, encoding="utf-8", xml_declaration=True)
 
 
 def _write_csv(path: Path, rows: list[tuple]) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.writer(handle)
+        writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(["Plugin ID", "CVE", "CVSS", "Risk", "Host", "Name", "Synopsis"])
         for _day, host, plugin, cve, cvss, risk, synopsis in rows:
             writer.writerow([plugin, cve, cvss, risk, host, synopsis, synopsis])
