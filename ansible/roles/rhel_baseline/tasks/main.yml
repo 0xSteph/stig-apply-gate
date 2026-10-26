@@ -154,21 +154,21 @@
 - name: Check local packages before install
   ansible.builtin.lineinfile:
     path: /etc/dnf/dnf.conf
-    regexp: '^localpkg_gpgcheck\\s*='
+    regexp: '^localpkg_gpgcheck\s*='
     line: localpkg_gpgcheck=True
   tags: [localpkg, automate]
 
 - name: Require 15 character passwords on the next change
   ansible.builtin.lineinfile:
     path: /etc/security/pwquality.conf
-    regexp: '^#?\\s*minlen\\s*='
+    regexp: '^#?\s*minlen\s*='
     line: minlen = {{ baseline_minlen }}
   tags: [pwquality, automate]
 
 - name: Refuse direct SSH logons as root
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
-    regexp: '^#?\\s*PermitRootLogin\\s+'
+    regexp: '^#?\s*PermitRootLogin\s+'
     line: "PermitRootLogin {{ permit_root_login }}"
     validate: /usr/sbin/sshd -t -f %s
   notify: Restart sshd after a root-login change

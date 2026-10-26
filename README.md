@@ -1,5 +1,7 @@
 # Findings Register
 
+![CI](https://github.com/0xSteph/stig-apply-gate/actions/workflows/ci.yml/badge.svg)
+
 A findings register for the exports an enclave already produces. You give it OpenSCAP or SCC XCCDF, a STIG Viewer checklist, an ACAS or Nessus CSV, and a read-only ESXi snapshot. It gives back CAT clocks, drift, exceptions, a backup check, and an evidence pack.
 
 Shops already do this in Excel, eMASS, ACAS, SCC, and Evaluate-STIG. This does not replace those tools and it does not scan anything. It is the transcription after the exports exist: which rows are still open, which clock they are on, which ones are safe to hand to Ansible, and which ones are not.
@@ -58,13 +60,39 @@ Put a date (`2026-09-20`) in checklist and CSV filenames. XCCDF uses `TestResult
 Supported inputs:
 
 - XCCDF 1.2 results, including the benchmark `Rule` block SCC and OpenSCAP write next to the results
-- STIG Viewer CKL, including severity override
+- STIG Viewer CKL and STIG Viewer 3 / Evaluate-STIG CKLB, including severity override
 - ACAS or Nessus CSV with a Host column, Risk, Plugin ID, CVE, and CVSS
 - An ESXi snapshot from `vmware/collect_esxi_posture.py`
 
 A `.nessus` XML file is not read. Export CSV from the console first.
 
 Same finding, three identifiers. A checklist row `RHEL-08-010550` / `V-230296` and an XCCDF result `SV-230296r858711_rule` become one clock. ACAS is findings-only: a plugin that disappears while the host is still in the later file is closed. A host that is missing from the later file is not.
+
+## Verify the exports
+
+The ledger records a sha256 and a size for every export it read. The evidence pack's `attestation.json` carries the same hashes, plus one `manifest_sha256` you can read aloud or write on a transfer form.
+
+```bash
+python3 -m findings verify --ledger web/src/data/ledger.json   --scan fixtures/lab/scans --attestation dist/evidence/attestation.json
+```
+
+Files are matched to the ledger by file name. Each row shows path, expected hash, actual hash, and ok, mismatch, missing, or extra.
+
+Exit 0 means every source file matched and none were missing. An extra file is listed but does not fail the check. Exit 1 means at least one file changed or is missing, or the attestation disagrees with the ledger. The reasons are printed on stderr.
+
+`manifest_sha256` is the sha256 of the sorted `<sha256>  <path>` lines, one per file. `sha256sum <files> | LC_ALL=C sort | sha256sum` gives the same value.
+
+## Write results back into a checklist
+
+STIG Viewer 3 and Evaluate-STIG write `.cklb`, which is JSON. The register reads it the same way it reads a `.ckl`: the host comes from `fqdn`, or `host_name` when `fqdn` is blank, and the date comes from the filename. A CKL row and a CKLB row for the same rule on the same host become one clock. A `.cklb` with no host or no rules stops the run like any other file that does not read.
+
+To hand the register's view back to whoever owns the checklist:
+
+```bash
+python3 -m findings annotate --ledger web/src/data/ledger.json   --checklist fixtures/lab/scans/ad01_2026-09-20.ckl --out dist/ad01_2026-09-20.ckl
+```
+
+Each matched rule gets a block under a `--- findings register <date> ---` line in finding details and comments: clock, due date, CAT, the exception id if there is one, and the apply-gate decision and reason. Existing text stays above the line. STATUS is not changed, and rows the ledger does not hold are copied as they were. The command refuses to write over the input file. It reads `.ckl` and `.cklb`.
 
 ## When a file does not read
 
@@ -95,6 +123,24 @@ Classes on each open row:
 | gpo | Domain-joined. Fix the GPO, not the local policy |
 | blocked | Closing it now would be a false pass |
 | do-not-automate | A script would pass the scanner and break the mission, or violate a signed exception |
+
+## Controls
+
+The Controls page lists the NIST SP 800-53 controls behind the CCIs the scanners reported, grouped by family, with each control's worst clock, its open, past-clock, and excepted counts, the earliest due date, and links to the findings under it. Control ids are normalized, so `AC-2 (1)` and `AC-02 (01)` are one control. A checklist row carries a CCI but no control id; it takes the control another scan in the same ledger reported for that CCI. A finding with no CCI, or with a CCI no scan tied to a control, is listed under `unmapped` so it does not drop out of the view. The evidence pack writes the same view twice: `controls.csv`, one row per control with the counts and the finding slugs joined by `;`, and `controls.md`, grouped by family with each finding's host and clock.
+
+## Sign the gate
+
+The playbook trusts `ansible/generated/apply-gate.json` only when an OpenSSH signature next to it verifies. Anyone can edit the JSON. Only the holder of the signing key can make it verify again. Needs OpenSSH 8.2 or newer on the controller.
+
+```bash
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/findings-gate
+cp ansible/allowed_signers.example ansible/allowed_signers
+# replace the AAAA... line with: findings-register <contents of ~/.ssh/findings-gate.pub>
+python3 -m findings demo --sign-key ~/.ssh/findings-gate
+python3 -m findings verify-gate --gate ansible/generated/apply-gate.json   --allowed-signers ansible/allowed_signers --identity findings-register   --ledger web/src/data/ledger.json
+```
+
+`python3 -m findings sign --gate ansible/generated/apply-gate.json --key ~/.ssh/findings-gate` signs a gate that already exists. `ansible/site.yml` runs the same check on the controller before the role reads the gate. It stops when the signature is missing, the file was edited after signing, or the gate's `as_of` does not match the ledger's `generated_for`. `ingest` takes `--sign-key` too. `rehearse` never signs. `ansible/allowed_signers` and `*.sig` are gitignored. Keep the private key out of the repo.
 
 ## Try a change without applying it
 
@@ -148,12 +194,16 @@ On Windows, `windows/Invoke-BaselineAudit.ps1` with no switches only reports. `-
 - The domain controller time finding is left alone. ESXi syncs from the DC and the DC syncs from ESXi. A script that "fixes" one side makes the other worse.
 - ESXi SSH stays up when an exception says it is break-glass. Stopping it would violate that signature.
 
+## What CI checks
+
+CI runs on every push to master and every pull request. The Python job runs the test suite on 3.11, 3.12, and 3.13. One of those tests runs `python -m findings demo` and compares the gate it writes with `ansible/generated/apply-gate.json`. A change to the register that moves a decision fails that test and names the host and control, so the gate file is regenerated and reviewed in the same commit. The Ansible job runs yamllint, ansible-lint, and `ansible-playbook --syntax-check` on `site.yml` and `revert.yml`. PSScriptAnalyzer checks `windows/Invoke-BaselineAudit.ps1` for warnings and errors, and the web job installs, lints, and builds the review UI. An audit job runs pip-audit on the Python environment and the project, and `npm audit` on the web dependencies at critical severity. It is critical rather than high because Next 15 bundles a PostCSS that npm flags at high, and the fix is Next 16.
+
 ## What else is in the repo
 
 - `ansible/` — RHEL role, the dry-run play, and `revert.yml`. Read `ansible/generated/lab-plan.yml` before you choose tags.
 - `windows/Invoke-BaselineAudit.ps1` — report by default. `-Apply` and `-Revert` only touch FS-SMB1.
 - `vmware/collect_esxi_posture.py` — lockdown, SSH, NTP, and syslog. Snapshot mode needs no vCenter. `--govc` runs read-only `govc` commands and refuses to guess if SSH or NTP is missing from the service list.
 - `docs/runbooks/` — the pages that exist. DHCP and vCenter are missing on purpose, and the handoff gate says so.
-- `dist/evidence/` after `python3 -m findings demo` — POA&M CSV, per-host notes, drift, exceptions, and an attestation that names the source files.
+- `dist/evidence/` after `python3 -m findings demo` — POA&M CSV, per-host notes, drift, exceptions, the 800-53 control view, and an attestation that names and hashes the source files.
 
 Python 3.11 or newer. The register uses the standard library only. The review UI is a Next.js app in `web/` and reads `web/src/data/ledger.json`.
