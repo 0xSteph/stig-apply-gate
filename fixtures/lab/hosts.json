@@ -51,6 +51,6 @@
     "owner": "IT Engineering",
     "environment": "Integration Lab",
     "address": "10.8.1.31",
-    "window_note": "No open vCenter findings in this sample. The host is here because lockdown and the handoff both depend on it."
+    "window_note": "Lockdown and the handoff both depend on this host. Set the session timeout in the vSphere Client. NTP points at esxi01, so leave it until the ESXi time sources are fixed, then point vCenter at the same two."
   }
 ]

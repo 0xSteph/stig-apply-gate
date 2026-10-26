@@ -34,6 +34,13 @@
       "upstream_host": "rhel-repo01.lab.local",
       "upstream_control": "RHEL-08-010370",
       "because": "The mission host passes GPG checking and installs from the lab repo. The repo host still publishes packages with gpgcheck off, so this pass does not cover the packages."
+    },
+    {
+      "host": "vcenter01.lab.local",
+      "control": "VCSA-80-000158",
+      "upstream_host": "esxi01.lab.local",
+      "upstream_control": "ESXI-80-000124",
+      "because": "vCenter takes time from esxi01, and esxi01 takes time from ad01, which takes time from esxi01. An NTP server in the list passes the check, but the clock behind it is not authoritative until that loop is fixed."
     }
   ],
   "restart_bundles": [

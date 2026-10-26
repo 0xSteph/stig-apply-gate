@@ -436,12 +436,16 @@ def parse_acas(path: Path, observed_on: date | None = None) -> list[Observation]
 def parse_vsphere_export(path: Path, observed_on: date | None = None) -> list[Observation]:
     import json
 
-    from findings.vsphere import checks_from_snapshot, observations_from_checks
+    from findings.vsphere import checks_for_snapshot, observations_from_checks
 
     snapshot = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(snapshot, dict):
+        raise ValueError(f"{path} is not a JSON object")
     if observed_on and "observed_at" not in snapshot:
         snapshot = {**snapshot, "observed_at": observed_on.isoformat()}
-    checks = checks_from_snapshot(snapshot)
+    # `kind` picks the checks: none or esxi-posture is ESXi, as before;
+    # vcenter-posture and vm-posture go to the vCenter and VM checks.
+    checks = checks_for_snapshot(snapshot)
     return observations_from_checks(checks, source_file=str(path))
 
 

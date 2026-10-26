@@ -1,0 +1,15 @@
+{
+  "kind": "vm-posture",
+  "host": "rhel-mission01.lab.local",
+  "vm_name": "rhel-mission01",
+  "vcenter": "vcenter01.lab.local",
+  "observed_at": "2026-09-20",
+  "isolation.tools.copy.disable": "TRUE",
+  "isolation.tools.paste.disable": "TRUE",
+  "isolation.tools.dnd.disable": null,
+  "isolation.tools.diskShrink.disable": "TRUE",
+  "isolation.tools.diskWiper.disable": "TRUE",
+  "isolation.device.connectable.disable": "FALSE",
+  "RemoteDisplay.maxConnections": "1",
+  "tools.guestlib.enableHostInfo": "FALSE"
+}

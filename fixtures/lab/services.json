@@ -27,6 +27,6 @@
   {
     "name": "vCenter",
     "host": "vcenter01.lab.local",
-    "runbook": null
+    "runbook": "docs/runbooks/vcenter.md"
   }
 ]

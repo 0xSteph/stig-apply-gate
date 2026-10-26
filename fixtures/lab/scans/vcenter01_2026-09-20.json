@@ -1,0 +1,16 @@
+{
+  "kind": "vcenter-posture",
+  "host": "vcenter01.lab.local",
+  "observed_at": "2026-09-20",
+  "ntp_servers": [
+    "esxi01.lab.local"
+  ],
+  "syslog_targets": [
+    "syslog01.lab.local:514"
+  ],
+  "sso_lockout_failures": 3,
+  "sso_lockout_unlock_seconds": 0,
+  "sso_password_max_days": 90,
+  "session_timeout_minutes": 120,
+  "probe_errors": []
+}

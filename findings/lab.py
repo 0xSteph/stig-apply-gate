@@ -158,6 +158,44 @@ ACAS_ROWS = [
 ]
 
 
+# vCenter takes time from esxi01, so its NTP row passes on its own and is
+# hollow while esxi01 is in the loop with ad01 (see duties.json depends_on).
+# The SSO lockout is set. The session timeout was never changed from the
+# vSphere Client default of 120 minutes.
+VCENTER_SNAPSHOT = {
+    "kind": "vcenter-posture",
+    "host": "vcenter01.lab.local",
+    "observed_at": "2026-09-20",
+    "ntp_servers": ["esxi01.lab.local"],
+    "syslog_targets": ["syslog01.lab.local:514"],
+    "sso_lockout_failures": 3,
+    "sso_lockout_unlock_seconds": 0,
+    "sso_password_max_days": 90,
+    "session_timeout_minutes": 120,
+    "probe_errors": [],
+}
+
+# The mission VM, reported under its guest's ledger host so the rows join
+# rhel-mission01. Copy and paste are disabled. Drag and drop was never set,
+# which the benchmark does not count as a finding. The guest can still
+# connect and disconnect devices.
+VM_SNAPSHOT = {
+    "kind": "vm-posture",
+    "host": "rhel-mission01.lab.local",
+    "vm_name": "rhel-mission01",
+    "vcenter": "vcenter01.lab.local",
+    "observed_at": "2026-09-20",
+    "isolation.tools.copy.disable": "TRUE",
+    "isolation.tools.paste.disable": "TRUE",
+    "isolation.tools.dnd.disable": None,
+    "isolation.tools.diskShrink.disable": "TRUE",
+    "isolation.tools.diskWiper.disable": "TRUE",
+    "isolation.device.connectable.disable": "FALSE",
+    "RemoteDisplay.maxConnections": "1",
+    "tools.guestlib.enableHostInfo": "FALSE",
+}
+
+
 def write_lab_scans(root: Path) -> None:
     root.mkdir(parents=True, exist_ok=True)
     for host, day in _pairs(RHEL_RESULTS):
@@ -200,6 +238,8 @@ def write_lab_scans(root: Path) -> None:
     }
     # The lab exports are hashed into the ledger, so every writer here emits the same bytes on every OS.
     (root / "esxi01_2026-09-20.json").write_text(json.dumps(snapshot, indent=2) + "\n", encoding="utf-8", newline="\n")
+    (root / "vcenter01_2026-09-20.json").write_text(json.dumps(VCENTER_SNAPSHOT, indent=2) + "\n", encoding="utf-8", newline="\n")
+    (root / "rhel-mission01-vm_2026-09-20.json").write_text(json.dumps(VM_SNAPSHOT, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def _pairs(rows: list[tuple]) -> list[tuple[str, str]]:

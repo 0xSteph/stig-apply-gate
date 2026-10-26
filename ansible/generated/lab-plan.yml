@@ -25,6 +25,7 @@ windows:
       - "CVE-2023-48795 (change-window)"
       - "RHEL-08-010550 (change-window)"
       - "RHEL-08-030180 (change-window)"
+      - "VMCH-80-000197 (manual)"
   - host: esxi01.lab.local
     note: "Fix NTP with two sources that do not sync from this host. Leave SSH alone until EX-014 expires. Do not invent a syslog target."
     automate_controls:
@@ -38,3 +39,9 @@ windows:
       []
     hold:
       - "WN22-DC-000060 (do-not-automate)"
+  - host: vcenter01.lab.local
+    note: "Lockdown and the handoff both depend on this host. Set the session timeout in the vSphere Client. NTP points at esxi01, so leave it until the ESXi time sources are fixed, then point vCenter at the same two."
+    automate_controls:
+      []
+    hold:
+      - "VCSA-80-000089 (manual)"
