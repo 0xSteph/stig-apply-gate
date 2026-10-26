@@ -1,0 +1,19 @@
+---
+# ansible-lint settings for this repository. Run: ansible-lint ansible/
+
+profile: production
+
+exclude_paths:
+  # Written by `python -m findings demo`. The playbook reads apply-gate.json.
+  # lab-plan.yml is a note for the operator, not a playbook or a vars file.
+  - ansible/generated/
+  - .github/
+  - web/
+  - .lintvenv/
+
+skip_list:
+  # The role keeps its variable names (baseline_backup_dir, baseline_manifest,
+  # baseline_minlen, permit_root_login, findings_gate). revert.yml, the tests,
+  # and any inventory or -e override use those names, so renaming them to carry
+  # the role prefix would change how the play is driven. The rule is off.
+  - var-naming[no-role-prefix]

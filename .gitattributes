@@ -1,0 +1,6 @@
+# YAML stays LF in every checkout, including Windows with core.autocrlf=true,
+# so yamllint gives the same answer locally and in CI.
+*.yml text eol=lf
+*.yaml text eol=lf
+.yamllint text eol=lf
+.ansible-lint text eol=lf

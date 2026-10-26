@@ -1,0 +1,110 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or pull request cancels the run still in progress.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pytest
+        run: python -m pip install pytest
+      # Includes tests/test_golden_gate.py, which runs `python -m findings demo`
+      # and compares the gate it writes to ansible/generated/apply-gate.json.
+      - name: Run the tests
+        run: python -m pytest
+
+  ansible:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ansible-core, ansible-lint, and yamllint
+        run: python -m pip install ansible-core ansible-lint yamllint
+      - name: yamllint
+        run: yamllint ansible/ .github/
+      - name: ansible-lint
+        run: ansible-lint ansible/
+      # The role reads ansible/generated/apply-gate.json with include_vars at run
+      # time. That file is committed, not gitignored, and no signer file is
+      # involved, so the checkout has everything syntax-check needs. Syntax-check
+      # does not connect to the inventory hosts.
+      - name: Syntax-check site.yml
+        run: ansible-playbook --syntax-check -i ansible/inventory/lab.ini ansible/site.yml
+      - name: Syntax-check revert.yml
+        run: ansible-playbook --syntax-check -i ansible/inventory/lab.ini ansible/revert.yml
+
+  powershell:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PSScriptAnalyzer
+        run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+      - name: Analyze Invoke-BaselineAudit.ps1
+        run: Invoke-ScriptAnalyzer -Path windows/Invoke-BaselineAudit.ps1 -Severity Warning,Error -EnableExit
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install pip-audit
+        run: python -m pip install pip-audit
+      - name: Audit the Python environment
+        run: pip-audit
+      # The findings package declares no runtime dependencies. This still reads
+      # pyproject.toml, so a dependency added later is audited here.
+      - name: Audit the project
+        run: pip-audit .
+      # Runs even when a Python audit step failed, so both results are reported.
+      # A failure here still fails the job.
+      - name: Audit web dependencies
+        if: ${{ !cancelled() }}
+        working-directory: web
+        run: npm audit --audit-level=high
