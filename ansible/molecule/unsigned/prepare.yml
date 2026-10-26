@@ -1,0 +1,5 @@
+---
+# Shared prepare: writes the key, allowed_signers, and this scenario's gate on the controller, and
+# sets up rhel-repo01 in the container. gate_test_sign_gate is false, so no apply-gate.json.sig.
+- name: Prepare the controller and rhel-repo01.lab.local
+  ansible.builtin.import_playbook: ../shared/prepare.yml

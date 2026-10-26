@@ -1,0 +1,42 @@
+---
+# unsigned: the same gate as the allow scenario, with an allowed_signers file but no signature.
+# site.yml must stop at "Stop unless the gate signature verified", before any role task runs,
+# and leave every file on the host as it was.
+# Run from ansible/: molecule test -s unsigned
+driver:
+  name: docker
+platforms:
+  # The gate keys decisions by FQDN, so the container carries the lab name.
+  # Set MOLECULE_IMAGE to try another RHEL 9 compatible image.
+  - name: rhel-repo01.lab.local
+    image: "${MOLECULE_IMAGE:-registry.access.redhat.com/ubi9/ubi}"
+    pre_build_image: true
+    privileged: false
+    command: sleep infinity
+    groups:
+      - rhel
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      all:
+        findings_tier: lab
+        findings_signer_identity: findings-register
+        findings_gate_file: "{{ lookup('ansible.builtin.env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}/apply-gate.json"
+        findings_allowed_signers: "{{ lookup('ansible.builtin.env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}/allowed_signers"
+        findings_ledger_file: ""
+        gate_test_sign_gate: false
+        gate_test_import_signing_key: false
+verifier:
+  name: ansible
+scenario:
+  name: unsigned
+  # No idempotence step: converge runs site.yml through ansible-playbook and asserts on the result.
+  test_sequence:
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy

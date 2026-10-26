@@ -1,0 +1,126 @@
+---
+# After converge: the three allowed edits are in place, ssh-root is not, and the backup the role
+# wrote holds the original bytes. Then revert.yml runs and every file must match what prepare
+# recorded before converge, byte for byte.
+- name: Check the allowed edits and the backup on rhel-repo01
+  hosts: rhel
+  gather_facts: false
+  tasks:
+    - name: Read the edited files
+      ansible.builtin.slurp:
+        src: "{{ item }}"
+      loop:
+        - /etc/yum.repos.d/lab.repo
+        - /etc/dnf/dnf.conf
+        - /etc/security/pwquality.conf
+        - /etc/ssh/sshd_config
+      register: gate_test_edited
+
+    - name: Index the edited files by path
+      ansible.builtin.set_fact:
+        gate_test_text: >-
+          {{ dict(gate_test_edited.results | map(attribute='item')
+                  | zip(gate_test_edited.results | map(attribute='content') | map('b64decode'))) }}
+
+    - name: Check the edits the gate allowed, and the one it held back
+      ansible.builtin.assert:
+        that:
+          - gate_test_text['/etc/yum.repos.d/lab.repo'] is search('(?m)^gpgcheck=1$')
+          - gate_test_text['/etc/yum.repos.d/lab.repo'] is not search('(?m)^gpgcheck=0$')
+          - gate_test_text['/etc/dnf/dnf.conf'] is search('(?m)^localpkg_gpgcheck=True$')
+          - gate_test_text['/etc/dnf/dnf.conf'] is not search('(?m)^localpkg_gpgcheck=False$')
+          - gate_test_text['/etc/security/pwquality.conf'] is search('(?m)^minlen = 15$')
+          - gate_test_text['/etc/security/pwquality.conf'] is not search('(?m)^minlen = 8$')
+          - gate_test_text['/etc/ssh/sshd_config'] is search('(?m)^PermitRootLogin yes$')
+        fail_msg: "Unexpected file contents after converge: {{ gate_test_text }}"
+
+    - name: Read latest-path.txt
+      ansible.builtin.slurp:
+        src: /var/backups/findings-register/latest-path.txt
+      register: gate_test_latest
+
+    - name: Remember the backup directory
+      ansible.builtin.set_fact:
+        gate_test_backup_dir: "{{ gate_test_latest.content | b64decode | trim }}"
+
+    - name: Check that latest-path.txt names a backup directory for this run
+      ansible.builtin.assert:
+        that:
+          - gate_test_backup_dir is match('/var/backups/findings-register/[0-9]{8}T[0-9]{6}$')
+        fail_msg: "latest-path.txt says {{ gate_test_backup_dir }}"
+
+    - name: Read the backup manifest
+      ansible.builtin.slurp:
+        src: "{{ gate_test_backup_dir }}/manifest.json"
+      register: gate_test_manifest_raw
+
+    - name: Parse the manifest and read the fingerprints prepare recorded
+      ansible.builtin.set_fact:
+        gate_test_manifest: "{{ gate_test_manifest_raw.content | b64decode | from_json }}"
+        gate_test_baseline: >-
+          {{ lookup('ansible.builtin.file', lookup('ansible.builtin.env', 'MOLECULE_EPHEMERAL_DIRECTORY') ~ '/baseline-sha256.json')
+             | from_json }}
+
+    - name: Check that the manifest lists every file that existed
+      ansible.builtin.assert:
+        that:
+          - (gate_test_manifest.present | sort) == (gate_test_baseline.keys() | list | sort)
+          - gate_test_manifest.absent | length == 0
+        fail_msg: "manifest {{ gate_test_manifest }} does not match the files prepare wrote {{ gate_test_baseline.keys() | list }}"
+
+    - name: Hash the saved copies
+      ansible.builtin.stat:
+        path: "{{ gate_test_backup_dir }}/{{ item.key | basename }}"
+        get_checksum: true
+        checksum_algorithm: sha256
+      loop: "{{ gate_test_baseline | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      register: gate_test_saved
+
+    - name: Check that each saved copy holds the original bytes
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+          - item.stat.checksum == item.item.value
+        fail_msg: "{{ item.item.key }} was not saved as it was before converge."
+      loop: "{{ gate_test_saved.results }}"
+      loop_control:
+        label: "{{ item.item.key }}"
+
+- name: Put the files back with revert.yml
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Run revert.yml
+      ansible.builtin.import_tasks: ../shared/tasks/run_playbook.yml
+      vars:
+        gate_test_playbook: revert.yml
+
+    - name: Check that revert.yml finished
+      ansible.builtin.assert:
+        that:
+          - gate_test_run.rc == 0
+          - "'TASK [Put saved files back]' in gate_test_run.stdout"
+          - gate_test_run.stdout is search('rhel-repo01[.]lab[.]local +: ok=[0-9]+ +changed=[1-9][0-9]* +unreachable=0 +failed=0 ')
+        fail_msg: revert.yml did not finish. Read the playbook output above.
+
+- name: Check that every file is back to the bytes prepare wrote
+  hosts: rhel
+  gather_facts: false
+  tasks:
+    - name: Fingerprint the files after revert
+      ansible.builtin.import_tasks: ../shared/tasks/checksums.yml
+
+    - name: Read the fingerprints prepare recorded again
+      ansible.builtin.set_fact:
+        gate_test_baseline: >-
+          {{ lookup('ansible.builtin.file', lookup('ansible.builtin.env', 'MOLECULE_EPHEMERAL_DIRECTORY') ~ '/baseline-sha256.json')
+             | from_json }}
+
+    - name: Check that revert restored every byte
+      ansible.builtin.assert:
+        that:
+          - gate_test_file_hashes == gate_test_baseline
+        fail_msg: "Not restored. Before converge: {{ gate_test_baseline }} After revert: {{ gate_test_file_hashes }}"

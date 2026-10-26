@@ -1,0 +1,25 @@
+---
+# After a run the gate stopped: no backup directory, and every file the role could edit has the
+# sha256 prepare recorded. Import tasks/checksums.yml first; it sets gate_test_file_hashes.
+- name: Look for a backup directory
+  ansible.builtin.stat:
+    path: /var/backups/findings-register
+  register: gate_test_backup_root
+
+- name: Check that the stopped run created no backup directory
+  ansible.builtin.assert:
+    that:
+      - not gate_test_backup_root.stat.exists
+    fail_msg: /var/backups/findings-register exists, so the role got past the gate and started copying files.
+
+- name: Read the fingerprints prepare recorded
+  ansible.builtin.set_fact:
+    gate_test_baseline: >-
+      {{ lookup('ansible.builtin.file', lookup('ansible.builtin.env', 'MOLECULE_EPHEMERAL_DIRECTORY') ~ '/baseline-sha256.json')
+         | from_json }}
+
+- name: Check that every file is byte for byte what prepare wrote
+  ansible.builtin.assert:
+    that:
+      - gate_test_file_hashes == gate_test_baseline
+    fail_msg: "Files changed. Before: {{ gate_test_baseline }} After: {{ gate_test_file_hashes }}"

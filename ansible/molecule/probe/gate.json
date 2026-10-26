@@ -1,0 +1,31 @@
+{
+  "decisions": [
+    {
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "control": "RHEL-08-010370",
+      "slug": "rhel-repo01--RHEL-08-010370",
+      "tag": "gpgcheck",
+      "action": "probe",
+      "label": "Check first",
+      "reason": "The lab signing key is written down in the build notes and is not imported here. gpgcheck=1 before that key exists stops every install from this repo.",
+      "probe": "rpm -q gpg-pubkey",
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "control": "RHEL-08-020230",
+      "slug": "rhel-repo01--RHEL-08-020230",
+      "tag": "pwquality",
+      "action": "allow",
+      "label": "Apply",
+      "reason": "No signature, dependency, or predecessor blocks this edit.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    }
+  ],
+  "unscanned": []
+}

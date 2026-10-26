@@ -1,0 +1,25 @@
+---
+# The gate allows gpgcheck, localpkg, and pwquality, but it carries no signature.
+# site.yml must stop on the controller check, and no task from roles/rhel_baseline may run.
+# (Fact gathering, which only reads the host, runs before the check.)
+- name: Run site.yml with an unsigned gate
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Run site.yml --tags gpgcheck,localpkg,pwquality
+      ansible.builtin.import_tasks: ../shared/tasks/run_playbook.yml
+      vars:
+        gate_test_playbook: site.yml
+        gate_test_tags: gpgcheck,localpkg,pwquality
+
+    - name: Check that the play stopped on the signature
+      ansible.builtin.assert:
+        that:
+          - gate_test_run.rc != 0
+          - "'TASK [Stop unless the gate signature verified]' in gate_test_run.stdout"
+          - "'The apply gate was not verified' in gate_test_run.stdout"
+          - "'No signature at' in gate_test_run.stdout"
+          - "'TASK [rhel_baseline' not in gate_test_run.stdout"
+          - gate_test_run.stdout is search('rhel-repo01[.]lab[.]local +: ok=[0-9]+ +changed=0 ')
+        fail_msg: An unsigned gate did not stop site.yml before the role. Read the playbook output above.
