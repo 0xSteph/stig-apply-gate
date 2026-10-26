@@ -116,7 +116,9 @@
 - name: Remember which files existed
   ansible.builtin.set_fact:
     baseline_manifest:
-      present: "{{ (config_stats.results | selectattr('stat.exists') | map(attribute='stat.path') | list) + (saved_repo_files.files | map(attribute='path') | list) }}"
+      present: >-
+        {{ (config_stats.results | selectattr('stat.exists') | map(attribute='stat.path') | list)
+        + (saved_repo_files.files | map(attribute='path') | list) }}
       absent: "{{ config_stats.results | rejectattr('stat.exists') | map(attribute='item') | list }}"
   tags: [always]
 

@@ -39,9 +39,9 @@ if ($Apply -and $Revert) {
 }
 
 function Assert-ApplyAllowed {
-    param([string]$Control)
+    param([string]$Control, [string]$GatePath)
     if (-not $Apply) { return }
-    $path = $Gate
+    $path = $GatePath
     if (-not $path) {
         $path = Join-Path (Split-Path $PSScriptRoot -Parent) "ansible/generated/apply-gate.json"
     }
@@ -111,7 +111,7 @@ if (-not (Get-Command Get-WindowsFeature -ErrorAction SilentlyContinue)) {
     $smb1 = Get-WindowsFeature -Name FS-SMB1
     if ($smb1.InstallState -eq "Installed") {
         if ($Apply) {
-            Assert-ApplyAllowed -Control "WN22-00-000380"
+            Assert-ApplyAllowed -Control "WN22-00-000380" -GatePath $Gate
             Save-Smb1State -Feature $smb1
             if ($Reboot) {
                 Uninstall-WindowsFeature -Name FS-SMB1 -Restart | Out-Null

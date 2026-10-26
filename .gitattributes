@@ -1,3 +1,10 @@
 # The lab exports are hashed into web/src/data/ledger.json. Check them out byte for byte,
 # so `findings verify` gives the same answer on every OS and with any core.autocrlf setting.
 fixtures/lab/scans/** -text
+
+# YAML stays LF in every checkout, including Windows with core.autocrlf=true,
+# so yamllint gives the same answer locally and in CI.
+*.yml text eol=lf
+*.yaml text eol=lf
+.yamllint text eol=lf
+.ansible-lint text eol=lf

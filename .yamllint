@@ -1,0 +1,33 @@
+---
+# yamllint settings for this repository. Run: yamllint ansible/ .github/
+
+extends: default
+
+# The plan under ansible/generated/ is written by `python -m findings demo`.
+# A hand edit there is overwritten on the next run, so it is not linted here.
+ignore: |
+  ansible/generated/
+  web/node_modules/
+  .lintvenv/
+
+rules:
+  line-length:
+    max: 160
+  # The default, written out. .gitattributes keeps YAML files LF on Windows
+  # checkouts too, so this passes locally and in CI.
+  new-lines:
+    type: unix
+  # GitHub Actions uses the key `on:`, which this rule would read as a boolean.
+  truthy:
+    allowed-values: ["true", "false"]
+    check-keys: false
+  # The next four match what ansible-lint expects from a yamllint config,
+  # so both tools read the same files the same way.
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: false
+  braces:
+    max-spaces-inside: 1
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
