@@ -4,6 +4,8 @@ import csv
 import json
 from pathlib import Path
 
+from findings.digest import manifest_sha256
+
 
 def write_evidence(ledger: dict, out: Path) -> None:
     out.mkdir(parents=True, exist_ok=True)
@@ -26,6 +28,11 @@ def write_evidence(ledger: dict, out: Path) -> None:
                     "This register did not scan a host and did not change one."
                 ),
                 "sources": ledger["sources"],
+                "manifest_sha256": manifest_sha256(ledger["sources"]),
+                "manifest_format": (
+                    "sha256 of the sorted lines '<sha256>  <file>', one per distinct source file, "
+                    "each ending in a newline. Null when any source has no recorded hash."
+                ),
             },
             indent=2,
         ),

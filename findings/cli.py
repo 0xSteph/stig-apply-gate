@@ -44,6 +44,14 @@ def main(argv: list[str] | None = None) -> int:
     evidence.add_argument("--ledger", required=True)
     evidence.add_argument("--out", required=True)
 
+    verify = sub.add_parser(
+        "verify",
+        help="Check that the exports on disk are the ones the ledger was built from.",
+    )
+    verify.add_argument("--ledger", required=True)
+    verify.add_argument("--scan", action="append", required=True, help="File or directory of the exports to check.")
+    verify.add_argument("--attestation", default="", help="attestation.json from the evidence pack. Its hashes must agree with the ledger.")
+
     rehearse = sub.add_parser(
         "rehearse",
         help="Try gate changes on a copy. Does not write the lab record or the playbook gate.",
@@ -69,7 +77,46 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "rehearse":
         return _rehearse(args)
+    if args.command == "verify":
+        return _verify(args)
     return 1
+
+
+def _verify(args: argparse.Namespace) -> int:
+    """Exit 0 when every ledger source matches a file on disk. Exit 1 otherwise."""
+    from findings.digest import compare_attestation, verify_exports
+
+    try:
+        ledger = _load(Path(args.ledger))
+        attestation = _load(Path(args.attestation)) if args.attestation else None
+    except (OSError, ValueError) as exc:
+        print(f"Could not read the ledger or attestation: {exc}", file=sys.stderr)
+        return 1
+    sources = ledger.get("sources") or []
+    rows, problems = verify_exports(sources, [Path(raw) for raw in args.scan])
+    if not sources:
+        problems.append(f"{args.ledger}: the ledger lists no sources.")
+    if attestation is not None:
+        problems.extend(compare_attestation(sources, attestation))
+
+    headers = ("path", "expected", "actual", "status")
+    table = [headers] + [tuple(row[key] or "-" for key in headers) for row in rows]
+    widths = [max(len(line[index]) for line in table) for index in range(len(headers))]
+    for line in table:
+        print("  ".join(cell.ljust(width) for cell, width in zip(line, widths)).rstrip())
+    counts = {status: sum(1 for row in rows if row["status"] == status) for status in ("ok", "mismatch", "missing", "extra")}
+    print(
+        f"{counts['ok']} ok, {counts['mismatch']} mismatch, {counts['missing']} missing, "
+        f"{counts['extra']} extra file(s) not named in the ledger."
+    )
+    if attestation is not None and not any(problem.startswith("attestation:") for problem in problems):
+        print(f"attestation agrees with the ledger. manifest_sha256 {attestation.get('manifest_sha256')}")
+    if problems:
+        print("Verification failed:", file=sys.stderr)
+        for problem in problems:
+            print(f"  {problem}", file=sys.stderr)
+        return 1
+    return 0
 
 
 def _demo(args: argparse.Namespace) -> int:

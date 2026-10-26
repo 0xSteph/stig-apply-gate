@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import date, timedelta
+from pathlib import Path
 
 from findings import __version__
 from findings.catalog import lookup
+from findings.digest import display_path, hash_file
 from findings.gate import build_apply_gate
 from findings.models import FAIL_RESULTS, PASS_RESULTS, Observation, slug_for
 from findings.policy import Policy, parse_day
@@ -761,8 +763,14 @@ def _exception_view(exceptions: list[dict], findings: list[dict], today: date) -
 
 
 def _sources(observations: list[Observation]) -> list[dict]:
+    """One entry per export read, with the sha256 and size of the file.
+
+    The hash taken when the file was parsed wins. Without one, the file is hashed
+    now if it is still on disk. If it is gone, sha256 and bytes are null.
+    """
     seen = []
     keys = set()
+    hashes: dict[str, tuple[str | None, int | None]] = {}
     for item in observations:
         if item.result == "pass" and "Absent from a later ACAS" in item.detail:
             continue
@@ -770,7 +778,21 @@ def _sources(observations: list[Observation]) -> list[dict]:
         if key in keys or not item.source_file:
             continue
         keys.add(key)
-        seen.append({"file": item.source_file, "source": item.source, "observed_at": item.observed_at.isoformat()})
+        if item.source_sha256:
+            hashes.setdefault(item.source_file, (item.source_sha256, item.source_bytes))
+        elif item.source_file not in hashes:
+            path = Path(item.source_file)
+            hashes[item.source_file] = hash_file(path) if path.is_file() else (None, None)
+        sha256, size = hashes[item.source_file]
+        seen.append(
+            {
+                "file": display_path(item.source_file),
+                "source": item.source,
+                "observed_at": item.observed_at.isoformat(),
+                "sha256": sha256,
+                "bytes": size,
+            }
+        )
     return seen
 
 

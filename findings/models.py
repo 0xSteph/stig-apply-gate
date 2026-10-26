@@ -31,6 +31,10 @@ class Observation:
     detail: str = ""
     cvss: float | None = None
     platform: str = ""
+    # Hash and size of source_file, taken when the file was read. None when the
+    # observation was not read through load_scans.
+    source_sha256: str | None = None
+    source_bytes: int | None = None
 
     def identifiers(self) -> list[tuple[str, str]]:
         pairs: list[tuple[str, str]] = []

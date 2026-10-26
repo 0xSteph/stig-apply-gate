@@ -6,6 +6,7 @@ from datetime import date
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
+from findings.digest import NOT_EXPORTS, hash_file
 from findings.models import Observation
 
 _DATE_IN_NAME = re.compile(r"(20\d{2}-\d{2}-\d{2})")
@@ -362,7 +363,7 @@ def load_scans(path: Path) -> tuple[list[Observation], list[str]]:
     problems: list[str] = []
     observations: list[Observation] = []
     files = [path] if path.is_file() else sorted(item for item in path.rglob("*") if item.is_file())
-    skip_names = {"hosts.json", "exceptions.json", "backups.json", "services.json", "site.json", "milestones.json"}
+    skip_names = NOT_EXPORTS
     known = {".xml", ".ckl", ".csv", ".json"}
     for item in files:
         if item.name in skip_names:
@@ -375,6 +376,8 @@ def load_scans(path: Path) -> tuple[list[Observation], list[str]]:
             )
             continue
         try:
+            # Hash before parsing so the recorded value is the file as it was read.
+            sha256, size = hash_file(item)
             found = parse_scan(item)
         except (ValueError, ET.ParseError, json.JSONDecodeError, csv.Error, OSError, KeyError) as exc:
             problems.append(f"{item}: {exc}")
@@ -382,6 +385,9 @@ def load_scans(path: Path) -> tuple[list[Observation], list[str]]:
         if not found:
             problems.append(f"{item}: parsed, but it contained no findings.")
             continue
+        for observation in found:
+            observation.source_sha256 = sha256
+            observation.source_bytes = size
         observations.extend(found)
     readable = [item for item in files if item.name not in skip_names]
     if not readable:

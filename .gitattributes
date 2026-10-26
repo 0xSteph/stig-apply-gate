@@ -1,0 +1,3 @@
+# The lab exports are hashed into web/src/data/ledger.json. Check them out byte for byte,
+# so `findings verify` gives the same answer on every OS and with any core.autocrlf setting.
+fixtures/lab/scans/** -text
