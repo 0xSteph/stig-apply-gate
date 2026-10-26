@@ -6,6 +6,7 @@ The class is the decision, not a suggestion to run everything.
 `gpo` must be fixed in Group Policy, not on the local box.
 `blocked` cannot be closed honestly until something else exists.
 `do-not-automate` will pass a scanner and break the mission, or hide the real defect.
+`manual` is made by a person in a console no playbook here reaches, such as vCenter.
 """
 
 from __future__ import annotations
@@ -96,6 +97,104 @@ CATALOG: dict[str, dict] = {
         "why": "An empty syslog target is an honest failure. Pointing it at a hostname that does not answer turns it into a false pass and you lose the logs.",
         "verify": "Syslog.global.logHost is a collector that received a test event.",
         "avoid": "A one-line advanced setting is not remediation if nothing is listening.",
+    },
+    "VCSA-80-000158": {
+        "class": "blocked",
+        "summary": "Point vCenter at the same two time sources ESXi gets, once they exist.",
+        "why": "vCenter takes time from esxi01, and esxi01 is in a loop with the domain controller. A server name in the NTP list passes the check without making the clock authoritative.",
+        "verify": "VAMI Time shows NTP with sources that are not esxi01 or ad01, each listed as Reachable.",
+        "avoid": "Do not swap esxi01 for ad01. That moves vCenter onto the other half of the same loop.",
+    },
+    "VCSA-80-000148": {
+        "class": "blocked",
+        "summary": "Do not add a syslog forwarding target until the collector is actually up.",
+        "why": "An empty forwarding list is an honest failure. A target that does not answer passes the check and loses the logs.",
+        "verify": "VAMI Syslog lists the collector as Reachable, and the collector received a test event.",
+        "avoid": "Do not invent a target to turn the row green.",
+    },
+    "VCSA-80-000023": {
+        "class": "manual",
+        "summary": "Set the SSO lockout to three failed logins in vCenter.",
+        "why": "The SSO lockout policy is set in the vSphere Client under Single Sign On, not on a host a playbook reaches. The next vcenter-posture snapshot is the proof.",
+        "verify": "Lockout policy: maximum failed login attempts 3.",
+        "avoid": "Know who can unlock an SSO account before you tighten it, and which service accounts log in with a password.",
+    },
+    "VCSA-80-000266": {
+        "class": "manual",
+        "summary": "Set the SSO unlock time to 0 so an administrator unlocks locked accounts.",
+        "why": "The setting lives in the SSO lockout policy in vCenter, not on a host a playbook reaches. The next vcenter-posture snapshot is the proof.",
+        "verify": "Lockout policy: unlock time 0 seconds.",
+        "avoid": "With unlock time 0, a locked service account stays locked. Check the service accounts before a weekend.",
+    },
+    "VCSA-80-000079": {
+        "class": "manual",
+        "summary": "Set the SSO password lifetime to 90 days or less.",
+        "why": "The SSO password policy is set in vCenter. It binds the next password change and does not expire current passwords at once.",
+        "verify": "Password policy: maximum lifetime 90 days or less.",
+        "avoid": "Do not shorten it on the day of a campaign. Service account passwords expire on the same clock.",
+    },
+    "VCSA-80-000089": {
+        "class": "manual",
+        "summary": "Set the vSphere Client session timeout to 15 minutes in vCenter.",
+        "why": "The session timeout is vCenter client configuration, changed in the vSphere Client by someone with the right role. No playbook in this repo reaches it, and the next vcenter-posture snapshot is the proof.",
+        "verify": "vSphere Client configuration: session timeout 15 minutes or less.",
+        "avoid": "Do not shorten it in the middle of a console session someone else is using. They lose that session.",
+    },
+    "VMCH-80-000189": {
+        "class": "manual",
+        "summary": "Set isolation.tools.copy.disable to true on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows isolation.tools.copy.disable true, or unset.",
+        "avoid": "Do not power the mission VM off to apply it outside a window the mission owner agreed to.",
+    },
+    "VMCH-80-000191": {
+        "class": "manual",
+        "summary": "Set isolation.tools.dnd.disable to true on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows isolation.tools.dnd.disable true, or unset.",
+        "avoid": "Do not power the mission VM off to apply it outside a window the mission owner agreed to.",
+    },
+    "VMCH-80-000192": {
+        "class": "manual",
+        "summary": "Set isolation.tools.paste.disable to true on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows isolation.tools.paste.disable true, or unset.",
+        "avoid": "Do not power the mission VM off to apply it outside a window the mission owner agreed to.",
+    },
+    "VMCH-80-000193": {
+        "class": "manual",
+        "summary": "Set isolation.tools.diskShrink.disable to true on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows isolation.tools.diskShrink.disable true, or unset.",
+        "avoid": "Do not power the mission VM off to apply it outside a window the mission owner agreed to.",
+    },
+    "VMCH-80-000194": {
+        "class": "manual",
+        "summary": "Set isolation.tools.diskWiper.disable to true on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows isolation.tools.diskWiper.disable true, or unset.",
+        "avoid": "Do not power the mission VM off to apply it outside a window the mission owner agreed to.",
+    },
+    "VMCH-80-000195": {
+        "class": "manual",
+        "summary": "Set RemoteDisplay.maxConnections to 1 on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. Unlike the isolation settings, unset is a finding here. It takes effect at the next cold start, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows RemoteDisplay.maxConnections 1.",
+        "avoid": "With one console session, a second person who opens the console takes it from the first. Say so before someone is mid-change.",
+    },
+    "VMCH-80-000197": {
+        "class": "manual",
+        "summary": "Set isolation.device.connectable.disable to true on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows isolation.device.connectable.disable true, or unset.",
+        "avoid": "Do not power the mission VM off to apply it outside a window the mission owner agreed to. If the mission loads media from a virtual CD-ROM, connect it from vCenter afterwards, not from the guest.",
+    },
+    "VMCH-80-000198": {
+        "class": "manual",
+        "summary": "Set tools.guestlib.enableHostInfo to false on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows tools.guestlib.enableHostInfo false, or unset.",
+        "avoid": "A performance agent in the guest that reads host details stops reporting them. Ask the mission owner first.",
     },
     "CVE-2024-6387": {
         "class": "change-window",

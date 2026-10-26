@@ -53,6 +53,32 @@
       "as_of": "2026-09-27"
     },
     {
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "control": "VMCH-80-000197",
+      "slug": "rhel-mission01--VMCH-80-000197",
+      "tag": null,
+      "action": "refuse",
+      "label": "Stopped",
+      "reason": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "vcenter01.lab.local",
+      "host_short": "vcenter01",
+      "control": "VCSA-80-000089",
+      "slug": "vcenter01--VCSA-80-000089",
+      "tag": null,
+      "action": "refuse",
+      "label": "Stopped",
+      "reason": "The session timeout is vCenter client configuration, changed in the vSphere Client by someone with the right role. No playbook in this repo reaches it, and the next vcenter-posture snapshot is the proof.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
       "host": "wsus01.lab.local",
       "host_short": "wsus01",
       "control": "WN22-00-000380",
@@ -87,6 +113,19 @@
       "action": "hollow",
       "label": "Pass is local",
       "reason": "The mission host passes GPG checking and installs from the lab repo. The repo host still publishes packages with gpgcheck off, so this pass does not cover the packages.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "vcenter01.lab.local",
+      "host_short": "vcenter01",
+      "control": "VCSA-80-000158",
+      "slug": "vcenter01--VCSA-80-000158",
+      "tag": null,
+      "action": "hollow",
+      "label": "Pass is local",
+      "reason": "vCenter takes time from esxi01, and esxi01 takes time from ad01, which takes time from esxi01. An NTP server in the list passes the check, but the clock behind it is not authoritative until that loop is fixed.",
       "probe": null,
       "bundle": [],
       "as_of": "2026-09-27"
@@ -208,7 +247,5 @@
       "as_of": "2026-09-27"
     }
   ],
-  "unscanned": [
-    "vcenter01.lab.local"
-  ]
+  "unscanned": []
 }

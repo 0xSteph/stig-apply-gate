@@ -137,7 +137,7 @@ export default function MethodPage() {
           <p>
             The handoff page is supposed to be red. Integration Lab is not ready to leave the people who built it. CAT I
             items are late, an exception expired, the audit regression has no engineer note, WSUS missed its RPO, the
-            ESXi restore test is old, and DHCP and vCenter have no runbook.
+            ESXi restore test is old, and DHCP has no runbook.
           </p>
           <p>
             Clocks are calendar days from the current failing streak. A regression restarts the clock. Vulnerability

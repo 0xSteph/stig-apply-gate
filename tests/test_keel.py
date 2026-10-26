@@ -349,7 +349,9 @@ def test_lab_story(tmp_path: Path):
     assert gate[("rhel-mission01", "RHEL-08-010550")]["action"] == "bundle"
     assert gate[("rhel-mission01", "RHEL-08-010370")]["action"] == "hollow"
     assert "hollow_pass" in by_control[("rhel-mission01", "RHEL-08-010370")]["flags"]
-    assert "vcenter01.lab.local" in ledger["apply_gate"]["unscanned"]
+    # vcenter01 has a vcenter-posture snapshot this period; a host without one is
+    # covered by test_vcenter_vm.test_host_without_a_scan_this_period_is_unscanned.
+    assert ledger["apply_gate"]["unscanned"] == []
     assert gate[("rhel-repo01", "RHEL-08-020230")]["action"] == "allow"
     evidence = tmp_path / "evidence"
     write_evidence(ledger, evidence)

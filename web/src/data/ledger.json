@@ -77,7 +77,7 @@
       "owner": "IT Engineering",
       "environment": "Integration Lab",
       "address": "10.8.1.31",
-      "window_note": "No open vCenter findings in this sample. The host is here because lockdown and the handoff both depend on it."
+      "window_note": "Lockdown and the handoff both depend on this host. Set the session timeout in the vSphere Client. NTP points at esxi01, so leave it until the ESXi time sources are fixed, then point vCenter at the same two."
     }
   ],
   "services": [
@@ -109,7 +109,7 @@
     {
       "name": "vCenter",
       "host": "vcenter01.lab.local",
-      "runbook": null
+      "runbook": "docs/runbooks/vcenter.md"
     }
   ],
   "findings": [
@@ -1220,6 +1220,132 @@
       "apply_reason": "This restarts a service or wants a reboot. An unattended run will not touch it. Someone has to be at the console."
     },
     {
+      "slug": "rhel-mission01--VMCH-80-000197",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "VMCH-80-000197",
+      "rule_ver": "VMCH-80-000197",
+      "vuln_num": "V-258710",
+      "rule_id": "SV-258710r959010_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "The guest must not connect, disconnect, or change virtual devices.",
+      "benchmark": "VMware vSphere 8.0 Virtual Machine STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000366"
+      ],
+      "nist": [
+        "CM-6 b"
+      ],
+      "result": "fail",
+      "clock": "on_track",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": "2026-12-19",
+      "days_to_due": 83,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "VM rhel-mission01: isolation.device.connectable.disable is FALSE. The benchmark wants true.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "manual",
+        "summary": "Set isolation.device.connectable.disable to true on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows isolation.device.connectable.disable true, or unset.",
+        "avoid": "Do not power the mission VM off to apply it outside a window the mission owner agreed to. If the mission loads media from a virtual CD-ROM, connect it from vCenter afterwards, not from the guest."
+      },
+      "exception_id": null,
+      "drift": "new",
+      "apply_action": "refuse",
+      "apply_reason": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof."
+    },
+    {
+      "slug": "vcenter01--VCSA-80-000089",
+      "host": "vcenter01.lab.local",
+      "host_short": "vcenter01",
+      "platform": "vcenter",
+      "role": "vCenter Server",
+      "owner": "IT Engineering",
+      "control": "VCSA-80-000089",
+      "rule_ver": "VCSA-80-000089",
+      "vuln_num": "V-258920",
+      "rule_id": "SV-258920r1003601_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "vSphere Client sessions must end after 15 idle minutes.",
+      "benchmark": "VMware vSphere 8.0 vCenter STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-001133",
+        "CCI-004895",
+        "CCI-002361",
+        "CCI-002038"
+      ],
+      "nist": [
+        "SC-10",
+        "SC-11 b",
+        "AC-12",
+        "IA-11"
+      ],
+      "result": "fail",
+      "clock": "on_track",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": "2026-12-19",
+      "days_to_due": 83,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "fail",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "vSphere Client session timeout is 120 minutes. The benchmark wants 15 or less.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "manual",
+        "summary": "Set the vSphere Client session timeout to 15 minutes in vCenter.",
+        "why": "The session timeout is vCenter client configuration, changed in the vSphere Client by someone with the right role. No playbook in this repo reaches it, and the next vcenter-posture snapshot is the proof.",
+        "verify": "vSphere Client configuration: session timeout 15 minutes or less.",
+        "avoid": "Do not shorten it in the middle of a console session someone else is using. They lose that session."
+      },
+      "exception_id": null,
+      "drift": "new",
+      "apply_action": "refuse",
+      "apply_reason": "The session timeout is vCenter client configuration, changed in the vSphere Client by someone with the right role. No playbook in this repo reaches it, and the next vcenter-posture snapshot is the proof."
+    },
+    {
       "slug": "ad01--WN22-00-000380",
       "host": "ad01.lab.local",
       "host_short": "ad01",
@@ -1512,6 +1638,246 @@
       "apply_reason": null
     },
     {
+      "slug": "rhel-mission01--VMCH-80-000193",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "VMCH-80-000193",
+      "rule_ver": "VMCH-80-000193",
+      "vuln_num": "V-258706",
+      "rule_id": "SV-258706r959010_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Guest-initiated virtual disk shrinking must be disabled.",
+      "benchmark": "VMware vSphere 8.0 Virtual Machine STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000366"
+      ],
+      "nist": [
+        "CM-6 b"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "VM rhel-mission01: isolation.tools.diskShrink.disable is TRUE.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "manual",
+        "summary": "Set isolation.tools.diskShrink.disable to true on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows isolation.tools.diskShrink.disable true, or unset.",
+        "avoid": "Do not power the mission VM off to apply it outside a window the mission owner agreed to."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "rhel-mission01--VMCH-80-000194",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "VMCH-80-000194",
+      "rule_ver": "VMCH-80-000194",
+      "vuln_num": "V-258707",
+      "rule_id": "SV-258707r959010_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Guest-initiated virtual disk wiping must be disabled.",
+      "benchmark": "VMware vSphere 8.0 Virtual Machine STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000366"
+      ],
+      "nist": [
+        "CM-6 b"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "VM rhel-mission01: isolation.tools.diskWiper.disable is TRUE.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "manual",
+        "summary": "Set isolation.tools.diskWiper.disable to true on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows isolation.tools.diskWiper.disable true, or unset.",
+        "avoid": "Do not power the mission VM off to apply it outside a window the mission owner agreed to."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "rhel-mission01--VMCH-80-000195",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "VMCH-80-000195",
+      "rule_ver": "VMCH-80-000195",
+      "vuln_num": "V-258708",
+      "rule_id": "SV-258708r959010_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Only one remote console session may attach to the VM.",
+      "benchmark": "VMware vSphere 8.0 Virtual Machine STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000366"
+      ],
+      "nist": [
+        "CM-6 b"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "VM rhel-mission01: RemoteDisplay.maxConnections is 1.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "manual",
+        "summary": "Set RemoteDisplay.maxConnections to 1 on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. Unlike the isolation settings, unset is a finding here. It takes effect at the next cold start, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows RemoteDisplay.maxConnections 1.",
+        "avoid": "With one console session, a second person who opens the console takes it from the first. Say so before someone is mid-change."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "rhel-mission01--VMCH-80-000198",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "VMCH-80-000198",
+      "rule_ver": "VMCH-80-000198",
+      "vuln_num": "V-258711",
+      "rule_id": "SV-258711r959010_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "The guest must not read host details from the hypervisor.",
+      "benchmark": "VMware vSphere 8.0 Virtual Machine STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000366"
+      ],
+      "nist": [
+        "CM-6 b"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "VM rhel-mission01: tools.guestlib.enableHostInfo is FALSE.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "manual",
+        "summary": "Set tools.guestlib.enableHostInfo to false on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows tools.guestlib.enableHostInfo false, or unset.",
+        "avoid": "A performance agent in the guest that reads host details stops reporting them. Ask the mission owner first."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
       "slug": "rhel-repo01--RHEL-08-010550",
       "host": "rhel-repo01.lab.local",
       "host_short": "rhel-repo01",
@@ -1653,6 +2019,492 @@
         "why": "The September scan regressed. The package was present in August. Treat it as a patch-window casualty, not a new design question.",
         "verify": "rpm -q audit && systemctl is-active auditd",
         "avoid": "Loading a full audit ruleset on a mission box can stall the host. Install the package first, add rules in the same window, and watch the bench."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "vcenter01--VCSA-80-000023",
+      "host": "vcenter01.lab.local",
+      "host_short": "vcenter01",
+      "platform": "vcenter",
+      "role": "vCenter Server",
+      "owner": "IT Engineering",
+      "control": "VCSA-80-000023",
+      "rule_ver": "VCSA-80-000023",
+      "vuln_num": "V-258905",
+      "rule_id": "SV-258905r960840_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "vCenter SSO must lock an account after three failed logins.",
+      "benchmark": "VMware vSphere 8.0 vCenter STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000044"
+      ],
+      "nist": [
+        "AC-7 a"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "SSO locks an account after 3 failed logins.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "manual",
+        "summary": "Set the SSO lockout to three failed logins in vCenter.",
+        "why": "The SSO lockout policy is set in the vSphere Client under Single Sign On, not on a host a playbook reaches. The next vcenter-posture snapshot is the proof.",
+        "verify": "Lockout policy: maximum failed login attempts 3.",
+        "avoid": "Know who can unlock an SSO account before you tighten it, and which service accounts log in with a password."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "vcenter01--VCSA-80-000079",
+      "host": "vcenter01.lab.local",
+      "host_short": "vcenter01",
+      "platform": "vcenter",
+      "role": "vCenter Server",
+      "owner": "IT Engineering",
+      "control": "VCSA-80-000079",
+      "rule_ver": "VCSA-80-000079",
+      "vuln_num": "V-258918",
+      "rule_id": "SV-258918r1003597_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "vCenter SSO passwords must expire within 90 days.",
+      "benchmark": "VMware vSphere 8.0 vCenter STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-004066",
+        "CCI-000199"
+      ],
+      "nist": [
+        "IA-5 (1) (h)",
+        "IA-5 (1) (d)"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "SSO password lifetime is 90 days.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "manual",
+        "summary": "Set the SSO password lifetime to 90 days or less.",
+        "why": "The SSO password policy is set in vCenter. It binds the next password change and does not expire current passwords at once.",
+        "verify": "Password policy: maximum lifetime 90 days or less.",
+        "avoid": "Do not shorten it on the day of a campaign. Service account passwords expire on the same clock."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "vcenter01--VCSA-80-000148",
+      "host": "vcenter01.lab.local",
+      "host_short": "vcenter01",
+      "platform": "vcenter",
+      "role": "vCenter Server",
+      "owner": "IT Engineering",
+      "control": "VCSA-80-000148",
+      "rule_ver": "VCSA-80-000148",
+      "vuln_num": "V-258925",
+      "rule_id": "SV-258925r961395_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "vCenter must forward its logs to a site syslog collector.",
+      "benchmark": "VMware vSphere 8.0 vCenter STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-001851"
+      ],
+      "nist": [
+        "AU-4 (1)"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "Syslog forwards to syslog01.lab.local:514. Reachability is not in the snapshot.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "blocked",
+        "summary": "Do not add a syslog forwarding target until the collector is actually up.",
+        "why": "An empty forwarding list is an honest failure. A target that does not answer passes the check and loses the logs.",
+        "verify": "VAMI Syslog lists the collector as Reachable, and the collector received a test event.",
+        "avoid": "Do not invent a target to turn the row green."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "vcenter01--VCSA-80-000158",
+      "host": "vcenter01.lab.local",
+      "host_short": "vcenter01",
+      "platform": "vcenter",
+      "role": "vCenter Server",
+      "owner": "IT Engineering",
+      "control": "VCSA-80-000158",
+      "rule_ver": "VCSA-80-000158",
+      "vuln_num": "V-258927",
+      "rule_id": "SV-258927r1003604_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "vCenter must take time from an authoritative NTP source.",
+      "benchmark": "VMware vSphere 8.0 vCenter STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-004923",
+        "CCI-001891"
+      ],
+      "nist": [
+        "SC-45 (1) (a)",
+        "AU-8 (1) (a)"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [
+        "hollow_pass"
+      ],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "NTP servers: esxi01.lab.local. The snapshot does not say whether those sources are themselves authoritative.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "blocked",
+        "summary": "Point vCenter at the same two time sources ESXi gets, once they exist.",
+        "why": "vCenter takes time from esxi01, and esxi01 is in a loop with the domain controller. A server name in the NTP list passes the check without making the clock authoritative.",
+        "verify": "VAMI Time shows NTP with sources that are not esxi01 or ad01, each listed as Reachable.",
+        "avoid": "Do not swap esxi01 for ad01. That moves vCenter onto the other half of the same loop."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": "hollow",
+      "apply_reason": "vCenter takes time from esxi01, and esxi01 takes time from ad01, which takes time from esxi01. An NTP server in the list passes the check, but the clock behind it is not authoritative until that loop is fixed."
+    },
+    {
+      "slug": "vcenter01--VCSA-80-000266",
+      "host": "vcenter01.lab.local",
+      "host_short": "vcenter01",
+      "platform": "vcenter",
+      "role": "vCenter Server",
+      "owner": "IT Engineering",
+      "control": "VCSA-80-000266",
+      "rule_ver": "VCSA-80-000266",
+      "vuln_num": "V-258933",
+      "rule_id": "SV-258933r961368_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "A locked vCenter SSO account must stay locked until an administrator unlocks it.",
+      "benchmark": "VMware vSphere 8.0 vCenter STIG",
+      "severity": "medium",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "II",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-002238"
+      ],
+      "nist": [
+        "AC-7 b"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "SSO unlock time is 0 seconds.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "manual",
+        "summary": "Set the SSO unlock time to 0 so an administrator unlocks locked accounts.",
+        "why": "The setting lives in the SSO lockout policy in vCenter, not on a host a playbook reaches. The next vcenter-posture snapshot is the proof.",
+        "verify": "Lockout policy: unlock time 0 seconds.",
+        "avoid": "With unlock time 0, a locked service account stays locked. Check the service accounts before a weekend."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "rhel-mission01--VMCH-80-000189",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "VMCH-80-000189",
+      "rule_ver": "VMCH-80-000189",
+      "vuln_num": "V-258703",
+      "rule_id": "SV-258703r959010_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Console copy from the guest must be disabled.",
+      "benchmark": "VMware vSphere 8.0 Virtual Machine STIG",
+      "severity": "low",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "III",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000366"
+      ],
+      "nist": [
+        "CM-6 b"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "VM rhel-mission01: isolation.tools.copy.disable is TRUE.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "manual",
+        "summary": "Set isolation.tools.copy.disable to true on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows isolation.tools.copy.disable true, or unset.",
+        "avoid": "Do not power the mission VM off to apply it outside a window the mission owner agreed to."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "rhel-mission01--VMCH-80-000191",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "VMCH-80-000191",
+      "rule_ver": "VMCH-80-000191",
+      "vuln_num": "V-258704",
+      "rule_id": "SV-258704r959010_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Console drag and drop must be disabled.",
+      "benchmark": "VMware vSphere 8.0 Virtual Machine STIG",
+      "severity": "low",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "III",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000366"
+      ],
+      "nist": [
+        "CM-6 b"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "VM rhel-mission01: isolation.tools.dnd.disable is not set. The vSphere 8 default is the safe value, and the benchmark does not count unset as a finding.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "manual",
+        "summary": "Set isolation.tools.dnd.disable to true on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows isolation.tools.dnd.disable true, or unset.",
+        "avoid": "Do not power the mission VM off to apply it outside a window the mission owner agreed to."
+      },
+      "exception_id": null,
+      "drift": "unchanged",
+      "apply_action": null,
+      "apply_reason": null
+    },
+    {
+      "slug": "rhel-mission01--VMCH-80-000192",
+      "host": "rhel-mission01.lab.local",
+      "host_short": "rhel-mission01",
+      "platform": "rhel8",
+      "role": "Mission processing",
+      "owner": "IT Engineering",
+      "control": "VMCH-80-000192",
+      "rule_ver": "VMCH-80-000192",
+      "vuln_num": "V-258705",
+      "rule_id": "SV-258705r959010_rule",
+      "plugin_id": null,
+      "cve": null,
+      "title": "Console paste into the guest must be disabled.",
+      "benchmark": "VMware vSphere 8.0 Virtual Machine STIG",
+      "severity": "low",
+      "severity_verified": true,
+      "severity_override": null,
+      "cat": "III",
+      "cat_source": "stig",
+      "cci": [
+        "CCI-000366"
+      ],
+      "nist": [
+        "CM-6 b"
+      ],
+      "result": "pass",
+      "clock": "closed",
+      "flags": [],
+      "regression": false,
+      "first_seen": "2026-09-20",
+      "last_seen": "2026-09-20",
+      "due": null,
+      "days_to_due": null,
+      "days_overdue": 0,
+      "history": [
+        {
+          "date": "2026-09-20",
+          "result": "pass",
+          "sources": [
+            "vsphere"
+          ]
+        }
+      ],
+      "comments": "",
+      "detail": "VM rhel-mission01: isolation.tools.paste.disable is TRUE.",
+      "engineer_note": "",
+      "cvss": null,
+      "remediation": {
+        "class": "manual",
+        "summary": "Set isolation.tools.paste.disable to true on the VM in vCenter.",
+        "why": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "verify": "vm-posture snapshot shows isolation.tools.paste.disable true, or unset.",
+        "avoid": "Do not power the mission VM off to apply it outside a window the mission owner agreed to."
       },
       "exception_id": null,
       "drift": "unchanged",
@@ -1819,6 +2671,20 @@
         "control": "CVE-2024-6387",
         "title": "OpenSSH signal-handler race during authentication.",
         "cat": "I"
+      },
+      {
+        "slug": "rhel-mission01--VMCH-80-000197",
+        "host": "rhel-mission01.lab.local",
+        "control": "VMCH-80-000197",
+        "title": "The guest must not connect, disconnect, or change virtual devices.",
+        "cat": "II"
+      },
+      {
+        "slug": "vcenter01--VCSA-80-000089",
+        "host": "vcenter01.lab.local",
+        "control": "VCSA-80-000089",
+        "title": "vSphere Client sessions must end after 15 idle minutes.",
+        "cat": "II"
       }
     ],
     "opened_since_baseline": [
@@ -2351,6 +3217,18 @@
       "clock": "closed",
       "reason": "The mission host passes GPG checking and installs from the lab repo. The repo host still publishes packages with gpgcheck off, so this pass does not cover the packages.",
       "due": null
+    },
+    {
+      "kind": "finding",
+      "slug": "vcenter01--VCSA-80-000158",
+      "href": "/findings/vcenter01--VCSA-80-000158",
+      "title": "vCenter must take time from an authoritative NTP source.",
+      "host": "vcenter01",
+      "control": "VCSA-80-000158",
+      "cat": "II",
+      "clock": "closed",
+      "reason": "vCenter takes time from esxi01, and esxi01 takes time from ad01, which takes time from esxi01. An NTP server in the list passes the check, but the clock behind it is not authoritative until that loop is fixed.",
+      "due": null
     }
   ],
   "windows": [
@@ -2462,6 +3340,15 @@
           "clock": "on_track",
           "class": "change-window",
           "days_overdue": 0
+        },
+        {
+          "slug": "rhel-mission01--VMCH-80-000197",
+          "control": "VMCH-80-000197",
+          "title": "The guest must not connect, disconnect, or change virtual devices.",
+          "cat": "II",
+          "clock": "on_track",
+          "class": "manual",
+          "days_overdue": 0
         }
       ]
     },
@@ -2502,6 +3389,22 @@
           "cat": "II",
           "clock": "on_track",
           "class": "do-not-automate",
+          "days_overdue": 0
+        }
+      ]
+    },
+    {
+      "host": "vcenter01.lab.local",
+      "host_short": "vcenter01",
+      "note": "Lockdown and the handoff both depend on this host. Set the session timeout in the vSphere Client. NTP points at esxi01, so leave it until the ESXi time sources are fixed, then point vCenter at the same two.",
+      "items": [
+        {
+          "slug": "vcenter01--VCSA-80-000089",
+          "control": "VCSA-80-000089",
+          "title": "vSphere Client sessions must end after 15 idle minutes.",
+          "cat": "II",
+          "clock": "on_track",
+          "class": "manual",
           "days_overdue": 0
         }
       ]
@@ -2549,19 +3452,19 @@
         "id": "runbooks",
         "title": "Every enterprise service has a runbook",
         "status": "fail",
-        "detail": "DHCP, vCenter"
+        "detail": "DHCP"
       },
       {
         "id": "hollow-pass",
         "title": "No passing row depends on a host that is still failing",
         "status": "fail",
-        "detail": "rhel-mission01 RHEL-08-010370"
+        "detail": "rhel-mission01 RHEL-08-010370; vcenter01 VCSA-80-000158"
       },
       {
         "id": "unscanned",
         "title": "Every inventoried host was in this period's scan",
-        "status": "fail",
-        "detail": "vcenter01.lab.local"
+        "status": "pass",
+        "detail": "Every host in the inventory has a result dated this period."
       }
     ]
   },
@@ -2620,6 +3523,32 @@
         "as_of": "2026-09-27"
       },
       {
+        "host": "rhel-mission01.lab.local",
+        "host_short": "rhel-mission01",
+        "control": "VMCH-80-000197",
+        "slug": "rhel-mission01--VMCH-80-000197",
+        "tag": null,
+        "action": "refuse",
+        "label": "Stopped",
+        "reason": "This is a VM advanced setting, changed in vCenter, not on the guest. The benchmark says it takes effect at the next cold start, not a guest reboot, and the next vm-posture snapshot is the proof.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "vcenter01.lab.local",
+        "host_short": "vcenter01",
+        "control": "VCSA-80-000089",
+        "slug": "vcenter01--VCSA-80-000089",
+        "tag": null,
+        "action": "refuse",
+        "label": "Stopped",
+        "reason": "The session timeout is vCenter client configuration, changed in the vSphere Client by someone with the right role. No playbook in this repo reaches it, and the next vcenter-posture snapshot is the proof.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
         "host": "wsus01.lab.local",
         "host_short": "wsus01",
         "control": "WN22-00-000380",
@@ -2654,6 +3583,19 @@
         "action": "hollow",
         "label": "Pass is local",
         "reason": "The mission host passes GPG checking and installs from the lab repo. The repo host still publishes packages with gpgcheck off, so this pass does not cover the packages.",
+        "probe": null,
+        "bundle": [],
+        "as_of": "2026-09-27"
+      },
+      {
+        "host": "vcenter01.lab.local",
+        "host_short": "vcenter01",
+        "control": "VCSA-80-000158",
+        "slug": "vcenter01--VCSA-80-000158",
+        "tag": null,
+        "action": "hollow",
+        "label": "Pass is local",
+        "reason": "vCenter takes time from esxi01, and esxi01 takes time from ad01, which takes time from esxi01. An NTP server in the list passes the check, but the clock behind it is not authoritative until that loop is fixed.",
         "probe": null,
         "bundle": [],
         "as_of": "2026-09-27"
@@ -2775,12 +3717,10 @@
         "as_of": "2026-09-27"
       }
     ],
-    "unscanned": [
-      "vcenter01.lab.local"
-    ],
+    "unscanned": [],
     "counts": {
-      "refuse": 6,
-      "hollow": 1,
+      "refuse": 8,
+      "hollow": 2,
       "probe": 2,
       "bundle": 3,
       "window": 1,
@@ -2788,7 +3728,7 @@
     }
   },
   "stats": {
-    "open": 14,
+    "open": 16,
     "overdue": 4,
     "due_soon": 4,
     "excepted": 1,
@@ -2800,7 +3740,7 @@
         "overdue": 3
       },
       "II": {
-        "open": 10,
+        "open": 12,
         "overdue": 1
       },
       "III": {
@@ -2839,6 +3779,46 @@
       "earliest_due": "2026-10-13"
     },
     {
+      "control": "AC-7",
+      "family": "AC",
+      "ccis": [
+        "CCI-000044",
+        "CCI-002238"
+      ],
+      "findings": [
+        {
+          "slug": "vcenter01--VCSA-80-000023",
+          "host": "vcenter01.lab.local",
+          "host_short": "vcenter01",
+          "control": "VCSA-80-000023",
+          "title": "vCenter SSO must lock an account after three failed logins.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "vcenter01--VCSA-80-000266",
+          "host": "vcenter01.lab.local",
+          "host_short": "vcenter01",
+          "control": "VCSA-80-000266",
+          "title": "A locked vCenter SSO account must stay locked until an administrator unlocks it.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 0,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 2,
+      "worst_clock": "closed",
+      "open_all_excepted": false,
+      "earliest_due": null
+    },
+    {
       "control": "AC-10",
       "family": "AC",
       "ccis": [
@@ -2851,6 +3831,94 @@
           "host_short": "esxi01",
           "control": "ESXI-80-000008",
           "title": "ESXi lockdown mode must be enabled.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 0,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 1,
+      "worst_clock": "closed",
+      "open_all_excepted": false,
+      "earliest_due": null
+    },
+    {
+      "control": "AC-12",
+      "family": "AC",
+      "ccis": [
+        "CCI-001133",
+        "CCI-002038",
+        "CCI-002361",
+        "CCI-004895"
+      ],
+      "findings": [
+        {
+          "slug": "vcenter01--VCSA-80-000089",
+          "host": "vcenter01.lab.local",
+          "host_short": "vcenter01",
+          "control": "VCSA-80-000089",
+          "title": "vSphere Client sessions must end after 15 idle minutes.",
+          "cat": "II",
+          "clock": "on_track",
+          "due": "2026-12-19",
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 1,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 0,
+      "worst_clock": "on_track",
+      "open_all_excepted": false,
+      "earliest_due": "2026-12-19"
+    },
+    {
+      "control": "AU-4(1)",
+      "family": "AU",
+      "ccis": [
+        "CCI-001851"
+      ],
+      "findings": [
+        {
+          "slug": "vcenter01--VCSA-80-000148",
+          "host": "vcenter01.lab.local",
+          "host_short": "vcenter01",
+          "control": "VCSA-80-000148",
+          "title": "vCenter must forward its logs to a site syslog collector.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 0,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 1,
+      "worst_clock": "closed",
+      "open_all_excepted": false,
+      "earliest_due": null
+    },
+    {
+      "control": "AU-8(1)",
+      "family": "AU",
+      "ccis": [
+        "CCI-001891",
+        "CCI-004923"
+      ],
+      "findings": [
+        {
+          "slug": "vcenter01--VCSA-80-000158",
+          "host": "vcenter01.lab.local",
+          "host_short": "vcenter01",
+          "control": "VCSA-80-000158",
+          "title": "vCenter must take time from an authoritative NTP source.",
           "cat": "II",
           "clock": "closed",
           "due": null,
@@ -2965,6 +4033,111 @@
       "worst_clock": "overdue",
       "open_all_excepted": false,
       "earliest_due": "2026-08-14"
+    },
+    {
+      "control": "CM-6",
+      "family": "CM",
+      "ccis": [
+        "CCI-000366"
+      ],
+      "findings": [
+        {
+          "slug": "rhel-mission01--VMCH-80-000197",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "VMCH-80-000197",
+          "title": "The guest must not connect, disconnect, or change virtual devices.",
+          "cat": "II",
+          "clock": "on_track",
+          "due": "2026-12-19",
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-mission01--VMCH-80-000189",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "VMCH-80-000189",
+          "title": "Console copy from the guest must be disabled.",
+          "cat": "III",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-mission01--VMCH-80-000191",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "VMCH-80-000191",
+          "title": "Console drag and drop must be disabled.",
+          "cat": "III",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-mission01--VMCH-80-000192",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "VMCH-80-000192",
+          "title": "Console paste into the guest must be disabled.",
+          "cat": "III",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-mission01--VMCH-80-000193",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "VMCH-80-000193",
+          "title": "Guest-initiated virtual disk shrinking must be disabled.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-mission01--VMCH-80-000194",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "VMCH-80-000194",
+          "title": "Guest-initiated virtual disk wiping must be disabled.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-mission01--VMCH-80-000195",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "VMCH-80-000195",
+          "title": "Only one remote console session may attach to the VM.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-mission01--VMCH-80-000198",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "VMCH-80-000198",
+          "title": "The guest must not read host details from the hypervisor.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 1,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 7,
+      "worst_clock": "on_track",
+      "open_all_excepted": false,
+      "earliest_due": "2026-12-19"
     },
     {
       "control": "CM-7",
@@ -3095,6 +4268,157 @@
       "earliest_due": "2026-10-13"
     },
     {
+      "control": "IA-5(1)",
+      "family": "IA",
+      "ccis": [
+        "CCI-000199",
+        "CCI-004066"
+      ],
+      "findings": [
+        {
+          "slug": "vcenter01--VCSA-80-000079",
+          "host": "vcenter01.lab.local",
+          "host_short": "vcenter01",
+          "control": "VCSA-80-000079",
+          "title": "vCenter SSO passwords must expire within 90 days.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 0,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 1,
+      "worst_clock": "closed",
+      "open_all_excepted": false,
+      "earliest_due": null
+    },
+    {
+      "control": "IA-11",
+      "family": "IA",
+      "ccis": [
+        "CCI-001133",
+        "CCI-002038",
+        "CCI-002361",
+        "CCI-004895"
+      ],
+      "findings": [
+        {
+          "slug": "vcenter01--VCSA-80-000089",
+          "host": "vcenter01.lab.local",
+          "host_short": "vcenter01",
+          "control": "VCSA-80-000089",
+          "title": "vSphere Client sessions must end after 15 idle minutes.",
+          "cat": "II",
+          "clock": "on_track",
+          "due": "2026-12-19",
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 1,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 0,
+      "worst_clock": "on_track",
+      "open_all_excepted": false,
+      "earliest_due": "2026-12-19"
+    },
+    {
+      "control": "SC-10",
+      "family": "SC",
+      "ccis": [
+        "CCI-001133",
+        "CCI-002038",
+        "CCI-002361",
+        "CCI-004895"
+      ],
+      "findings": [
+        {
+          "slug": "vcenter01--VCSA-80-000089",
+          "host": "vcenter01.lab.local",
+          "host_short": "vcenter01",
+          "control": "VCSA-80-000089",
+          "title": "vSphere Client sessions must end after 15 idle minutes.",
+          "cat": "II",
+          "clock": "on_track",
+          "due": "2026-12-19",
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 1,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 0,
+      "worst_clock": "on_track",
+      "open_all_excepted": false,
+      "earliest_due": "2026-12-19"
+    },
+    {
+      "control": "SC-11",
+      "family": "SC",
+      "ccis": [
+        "CCI-001133",
+        "CCI-002038",
+        "CCI-002361",
+        "CCI-004895"
+      ],
+      "findings": [
+        {
+          "slug": "vcenter01--VCSA-80-000089",
+          "host": "vcenter01.lab.local",
+          "host_short": "vcenter01",
+          "control": "VCSA-80-000089",
+          "title": "vSphere Client sessions must end after 15 idle minutes.",
+          "cat": "II",
+          "clock": "on_track",
+          "due": "2026-12-19",
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 1,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 0,
+      "worst_clock": "on_track",
+      "open_all_excepted": false,
+      "earliest_due": "2026-12-19"
+    },
+    {
+      "control": "SC-45(1)",
+      "family": "SC",
+      "ccis": [
+        "CCI-001891",
+        "CCI-004923"
+      ],
+      "findings": [
+        {
+          "slug": "vcenter01--VCSA-80-000158",
+          "host": "vcenter01.lab.local",
+          "host_short": "vcenter01",
+          "control": "VCSA-80-000158",
+          "title": "vCenter must take time from an authoritative NTP source.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 0,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 1,
+      "worst_clock": "closed",
+      "open_all_excepted": false,
+      "earliest_due": null
+    },
+    {
       "control": "unmapped",
       "family": "unmapped",
       "ccis": [
@@ -3222,6 +4546,13 @@
       "bytes": 268
     },
     {
+      "file": "fixtures/lab/scans/rhel-mission01-vm_2026-09-20.json",
+      "source": "vsphere",
+      "observed_at": "2026-09-20",
+      "sha256": "6a1c8f4890160e7b8112d3b726f451f1536454a3c17afdf7f1a625c9319be274",
+      "bytes": 516
+    },
+    {
       "file": "fixtures/lab/scans/rhel-mission01_2026-07-15.xml",
       "source": "xccdf",
       "observed_at": "2026-07-15",
@@ -3262,6 +4593,13 @@
       "observed_at": "2026-09-20",
       "sha256": "41ca078b083bf369ec6a0f41de35483f29694b4f637149b3553f60e278a98199",
       "bytes": 3422
+    },
+    {
+      "file": "fixtures/lab/scans/vcenter01_2026-09-20.json",
+      "source": "vsphere",
+      "observed_at": "2026-09-20",
+      "sha256": "ce6cbb9339b8e69dedb3f86b71a84cdc31c960eb844e129c86544f914af0ceea",
+      "bytes": 350
     },
     {
       "file": "fixtures/lab/scans/wsus01_2026-07-15.ckl",
