@@ -99,6 +99,21 @@ def main(argv: list[str] | None = None) -> int:
         help="Also write web/src/data/window.json so the Test window page matches this run.",
     )
 
+    delta = sub.add_parser(
+        "delta",
+        help="List what moved between two ledgers: opened, closed, regressed, clocks, exceptions, hosts, gate, backups.",
+    )
+    delta.add_argument("--before", required=True, help="Last period's ledger JSON.")
+    delta.add_argument("--after", required=True, help="This period's ledger JSON.")
+    delta.add_argument("--out", default="", help="Also write the Markdown report here.")
+    delta.add_argument(
+        "--due-within",
+        type=int,
+        default=None,
+        help="Days after the later ledger's date. Default: the ledger policy's due_soon_days, else 21.",
+    )
+    delta.add_argument("--expiring-within", type=int, default=30, help="Days. Default 30.")
+
     args = parser.parse_args(argv)
     if args.command == "demo":
         return _demo(args)
@@ -118,6 +133,8 @@ def main(argv: list[str] | None = None) -> int:
         return _sign(args)
     if args.command == "verify-gate":
         return _verify_gate(args)
+    if args.command == "delta":
+        return _delta(args)
     return 1
 
 
@@ -135,6 +152,26 @@ def _annotate(args: argparse.Namespace) -> int:
     if not summary["matched"]:
         print("No ledger finding matched this checklist. Check that the host name matches the ledger.", file=sys.stderr)
     print(f"wrote {summary['out']}")
+    return 0
+
+
+def _delta(args: argparse.Namespace) -> int:
+    from findings.delta import LedgerReadError, compute_delta, load_ledger, render_delta
+
+    try:
+        before = load_ledger(Path(args.before))
+        after = load_ledger(Path(args.after))
+        report = compute_delta(before, after, due_within=args.due_within, expiring_within=args.expiring_within)
+    except (LedgerReadError, KeyError, TypeError, ValueError) as exc:
+        print(f"No delta was written. Could not read a ledger: {exc}", file=sys.stderr)
+        return 2
+    text = render_delta(report)
+    print(text, end="")
+    if args.out:
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+        print(f"wrote {out}")
     return 0
 
 
