@@ -18,7 +18,7 @@
       "control": "WN22-00-000380",
       "action": "refuse",
       "label": "Stopped",
-      "reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days.",
+      "reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days. The newest restore test (2026-06-01) took 10 hours 10 minutes. RTO is 8 hours.",
       "point": "SMBv1 wants a reboot. The backup is outside policy, so the play stops."
     },
     {
@@ -53,7 +53,7 @@
     {
       "id": "wsus-backup",
       "title": "WSUS backup back inside policy",
-      "change": "On the copy only, the WSUS last good backup is 27 Sep 2026 02:00 UTC and the restore test is 1 Sep 2026. Both the RPO and the restore-test window have to be inside policy. Moving only the backup age leaves the stop in place.",
+      "change": "On the copy only, the WSUS last good backup is 27 Sep 2026 02:00 UTC and a full restore test on 1 Sep 2026 passed in 7 hours against an 8-hour RTO. The RPO, the restore-test window, and the RTO all have to be inside policy. Moving only the backup age leaves the stop in place.",
       "meaning": "The backup stop lifts. The row does not become an unattended apply. SMBv1 still wants a reboot, so someone has to be at the console. That is the maintenance window.",
       "rows": [
         {
@@ -62,7 +62,7 @@
           "control": "WN22-00-000380",
           "before_action": "refuse",
           "before_label": "Stopped",
-          "before_reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days.",
+          "before_reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days. The newest restore test (2026-06-01) took 10 hours 10 minutes. RTO is 8 hours.",
           "after_action": "window",
           "after_label": "Someone there",
           "after_reason": "This restarts a service or wants a reboot. An unattended run will not touch it. Someone has to be at the console."

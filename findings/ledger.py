@@ -131,38 +131,159 @@ def build_ledger(
     }
 
 
+RESTORE_SCOPES = ("full", "partial", "config-only")
+RESTORE_RESULTS = ("pass", "fail")
+
+
 def evaluate_backups(backups: list[dict], today: date) -> list[dict]:
+    """Check each backup record against its RPO, its RTO, and its restore-test policy.
+
+    A restore test counts only when it was a full restore that passed. A
+    config-only or partial restore, or a failed one, is listed but does not
+    reset the restore-test clock. RTO is read from the newest test's duration.
+    """
     from datetime import datetime, timezone
 
     as_of = datetime(today.year, today.month, today.day, 12, 0, tzinfo=timezone.utc)
     rows = []
     for item in backups:
+        host = item.get("host", "?")
         last_success = datetime.fromisoformat(item["last_success"].replace("Z", "+00:00"))
         age_hours = (as_of - last_success).total_seconds() / 3600
         rpo_hours = float(item["rpo_hours"])
-        restore = parse_day(item["last_restore_test"])
-        restore_age = (today - restore).days
+        rto_hours = item.get("rto_hours")
+        rto_minutes = float(rto_hours) * 60 if rto_hours is not None else None
         restore_max = int(item["restore_test_max_days"])
+        tests = _restore_tests(host, item.get("restore_tests") or [], rto_minutes, today)
+        flags: list[str] = []
+
+        recorded = item.get("last_restore_test")
+        last_restore_test = recorded
+        newest = tests[0] if tests else None
+        qualifying = next((test for test in tests if test["qualifies"]), None)
+        if newest is not None:
+            # The entries win over the single date when both exist.
+            last_restore_test = newest["date"]
+            if recorded and parse_day(recorded).isoformat() != newest["date"]:
+                flags.append("restore_date_mismatch")
+
         rpo_met = age_hours <= rpo_hours
-        restore_met = restore_age <= restore_max
-        status = "ok" if rpo_met and restore_met else "breach"
+        if tests:
+            restore_scope_ok = newest["qualifies"]
+            rto_met = newest["rto_met"]
+            restore_date = parse_day(qualifying["date"]) if qualifying else None
+        else:
+            # A record with only a date says nothing about scope or duration.
+            restore_scope_ok = None
+            rto_met = None
+            restore_date = parse_day(recorded) if recorded else None
+        restore_age = (today - restore_date).days if restore_date else None
+        restore_met = restore_age is not None and restore_age <= restore_max
+
         reasons = []
         if not rpo_met:
             reasons.append(f"Last good backup is {int(age_hours)} hours old against an RPO of {int(rpo_hours)} hours.")
-        if not restore_met:
+        if restore_age is not None and not restore_met:
             reasons.append(f"Last restore test was {restore_age} days ago. Policy is {restore_max} days.")
+        if restore_scope_ok is False:
+            reasons.append(_scope_reason(newest))
+        if restore_age is None:
+            if tests:
+                which = "The one recorded restore test was not" if len(tests) == 1 else f"None of the {len(tests)} recorded restore tests was"
+                reasons.append(
+                    f"{which} a full restore that passed, so no restore test counts against the {restore_max}-day policy."
+                )
+            else:
+                reasons.append("No restore test is on record.")
+        if rto_met is False:
+            reasons.append(
+                f"The newest restore test ({newest['date']}) took {_duration(newest['duration_minutes'])}. "
+                f"RTO is {_hours(rto_hours)} hours."
+            )
+
+        unmet = (not rpo_met) or (not restore_met) or restore_scope_ok is False or rto_met is False
         rows.append(
             {
                 **item,
+                "last_restore_test": last_restore_test,
+                "restore_tests": tests,
                 "age_hours": round(age_hours, 1),
                 "restore_age_days": restore_age,
+                "newest_test": newest,
+                "qualifying_test": qualifying,
                 "rpo_met": rpo_met,
                 "restore_met": restore_met,
-                "status": status,
+                "restore_scope_ok": restore_scope_ok,
+                "rto_met": rto_met,
+                "status": "breach" if unmet else "ok",
                 "reasons": reasons,
+                "flags": flags,
             }
         )
     return rows
+
+
+def _restore_tests(host: str, entries: list[dict], rto_minutes: float | None, today: date) -> list[dict]:
+    tests = []
+    for entry in entries:
+        scope = entry.get("scope")
+        result = entry.get("result")
+        if scope not in RESTORE_SCOPES:
+            raise ValueError(
+                f"{host}: restore test {entry.get('date')} has scope {scope!r}. Use one of {', '.join(RESTORE_SCOPES)}."
+            )
+        if result not in RESTORE_RESULTS:
+            raise ValueError(f"{host}: restore test {entry.get('date')} has result {result!r}. Use pass or fail.")
+        day = parse_day(entry["date"])
+        duration = entry.get("duration_minutes")
+        if duration is not None:
+            duration = float(duration)
+            if duration.is_integer():
+                duration = int(duration)
+        rto_met = None
+        if duration is not None and rto_minutes is not None:
+            rto_met = duration <= rto_minutes
+        tests.append(
+            {
+                "date": day.isoformat(),
+                "duration_minutes": duration,
+                # Derived from the duration and the RTO. A stored value is ignored.
+                "rto_met": rto_met,
+                "restored": entry.get("restored", ""),
+                "scope": scope,
+                "tester": entry.get("tester", ""),
+                "result": result,
+                "ticket": entry.get("ticket") or None,
+                "notes": entry.get("notes", ""),
+                "age_days": (today - day).days,
+                "qualifies": scope == "full" and result == "pass",
+            }
+        )
+    tests.sort(key=lambda test: test["date"], reverse=True)
+    return tests
+
+
+def _scope_reason(test: dict) -> str:
+    rule = "Only a full restore that passed counts as a restore test."
+    if test["result"] != "pass":
+        return f"The newest restore test ({test['date']}, {test['scope']}) failed. {rule}"
+    return f"The newest restore test ({test['date']}) was {test['scope']}. {rule}"
+
+
+def _duration(minutes) -> str:
+    if minutes is None:
+        return "an unrecorded time"
+    hours, rest = divmod(int(round(minutes)), 60)
+    if hours and rest:
+        return f"{hours} hours {rest} minutes"
+    if hours:
+        return f"{hours} hours"
+    return f"{rest} minutes"
+
+
+def _hours(value) -> str:
+    number = float(value)
+    return str(int(number)) if number.is_integer() else str(number)
 
 
 def handoff_gates(findings: list[dict], backups: list[dict], services: list[dict]) -> dict:
@@ -194,9 +315,10 @@ def handoff_gates(findings: list[dict], backups: list[dict], services: list[dict
         },
         {
             "id": "backups",
-            "title": "RPO and restore tests are inside policy",
+            "title": "RPO, RTO, and restore tests are inside policy",
             "status": "fail" if backup_breaches else "pass",
-            "detail": ", ".join(item["host"] for item in backup_breaches) or "Every recorded system met RPO and has a recent restore test.",
+            "detail": " ".join(f"{item['host']}: {' '.join(item['reasons'])}" for item in backup_breaches)
+            or "Every recorded system met RPO and RTO and has a recent full restore test that passed.",
         },
         {
             "id": "runbooks",

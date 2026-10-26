@@ -411,7 +411,7 @@
       "exception_id": "EX-007",
       "drift": "persistent",
       "apply_action": "refuse",
-      "apply_reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days."
+      "apply_reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days. The newest restore test (2026-06-01) took 10 hours 10 minutes. RTO is 8 hours."
     },
     {
       "slug": "rhel-mission01--CVE-2024-6387",
@@ -1869,12 +1869,69 @@
       "last_restore_test": "2026-08-02",
       "restore_test_max_days": 90,
       "notes": "Last test restored SYSVOL to an isolated VM.",
+      "restore_tests": [
+        {
+          "date": "2026-08-02",
+          "duration_minutes": 150,
+          "rto_met": true,
+          "restored": "System state and SYSVOL to an isolated VM, then a logon against the restored DC",
+          "scope": "full",
+          "tester": "Windows systems administrator",
+          "result": "pass",
+          "ticket": "CHG-2026-0218",
+          "notes": "Authoritative restore of SYSVOL was not needed. The restored DC answered DNS and Kerberos on the isolated network.",
+          "age_days": 56,
+          "qualifies": true
+        },
+        {
+          "date": "2026-05-04",
+          "duration_minutes": 175,
+          "rto_met": true,
+          "restored": "System state to an isolated VM",
+          "scope": "full",
+          "tester": "Windows systems administrator",
+          "result": "pass",
+          "ticket": "CHG-2026-0131",
+          "notes": "Quarterly test.",
+          "age_days": 146,
+          "qualifies": true
+        }
+      ],
       "age_hours": 13.8,
       "restore_age_days": 56,
+      "newest_test": {
+        "date": "2026-08-02",
+        "duration_minutes": 150,
+        "rto_met": true,
+        "restored": "System state and SYSVOL to an isolated VM, then a logon against the restored DC",
+        "scope": "full",
+        "tester": "Windows systems administrator",
+        "result": "pass",
+        "ticket": "CHG-2026-0218",
+        "notes": "Authoritative restore of SYSVOL was not needed. The restored DC answered DNS and Kerberos on the isolated network.",
+        "age_days": 56,
+        "qualifies": true
+      },
+      "qualifying_test": {
+        "date": "2026-08-02",
+        "duration_minutes": 150,
+        "rto_met": true,
+        "restored": "System state and SYSVOL to an isolated VM, then a logon against the restored DC",
+        "scope": "full",
+        "tester": "Windows systems administrator",
+        "result": "pass",
+        "ticket": "CHG-2026-0218",
+        "notes": "Authoritative restore of SYSVOL was not needed. The restored DC answered DNS and Kerberos on the isolated network.",
+        "age_days": 56,
+        "qualifies": true
+      },
       "rpo_met": true,
       "restore_met": true,
+      "restore_scope_ok": true,
+      "rto_met": true,
       "status": "ok",
-      "reasons": []
+      "reasons": [],
+      "flags": []
     },
     {
       "host": "wsus01.lab.local",
@@ -1885,15 +1942,73 @@
       "last_restore_test": "2026-06-01",
       "restore_test_max_days": 90,
       "notes": "The last two jobs failed because the content volume filled. RPO is missed and the restore test is stale.",
+      "restore_tests": [
+        {
+          "date": "2026-06-01",
+          "duration_minutes": 610,
+          "rto_met": false,
+          "restored": "WSUS database and the update content volume to an isolated VM",
+          "scope": "full",
+          "tester": "Windows systems administrator",
+          "result": "pass",
+          "ticket": "CHG-2026-0155",
+          "notes": "The restore worked. Copying the content volume back took most of the time, and the content volume has grown since.",
+          "age_days": 118,
+          "qualifies": true
+        },
+        {
+          "date": "2026-03-02",
+          "duration_minutes": 455,
+          "rto_met": true,
+          "restored": "WSUS database and the update content volume to an isolated VM",
+          "scope": "full",
+          "tester": "Windows systems administrator",
+          "result": "pass",
+          "ticket": null,
+          "notes": "Inside the RTO with little to spare.",
+          "age_days": 209,
+          "qualifies": true
+        }
+      ],
       "age_hours": 61.8,
       "restore_age_days": 118,
+      "newest_test": {
+        "date": "2026-06-01",
+        "duration_minutes": 610,
+        "rto_met": false,
+        "restored": "WSUS database and the update content volume to an isolated VM",
+        "scope": "full",
+        "tester": "Windows systems administrator",
+        "result": "pass",
+        "ticket": "CHG-2026-0155",
+        "notes": "The restore worked. Copying the content volume back took most of the time, and the content volume has grown since.",
+        "age_days": 118,
+        "qualifies": true
+      },
+      "qualifying_test": {
+        "date": "2026-06-01",
+        "duration_minutes": 610,
+        "rto_met": false,
+        "restored": "WSUS database and the update content volume to an isolated VM",
+        "scope": "full",
+        "tester": "Windows systems administrator",
+        "result": "pass",
+        "ticket": "CHG-2026-0155",
+        "notes": "The restore worked. Copying the content volume back took most of the time, and the content volume has grown since.",
+        "age_days": 118,
+        "qualifies": true
+      },
       "rpo_met": false,
       "restore_met": false,
+      "restore_scope_ok": true,
+      "rto_met": false,
       "status": "breach",
       "reasons": [
         "Last good backup is 61 hours old against an RPO of 24 hours.",
-        "Last restore test was 118 days ago. Policy is 90 days."
-      ]
+        "Last restore test was 118 days ago. Policy is 90 days.",
+        "The newest restore test (2026-06-01) took 10 hours 10 minutes. RTO is 8 hours."
+      ],
+      "flags": []
     },
     {
       "host": "esxi01.lab.local",
@@ -1904,14 +2019,72 @@
       "last_restore_test": "2026-05-10",
       "restore_test_max_days": 90,
       "notes": "A configuration backup is not a VM restore. The last restore test is past policy.",
+      "restore_tests": [
+        {
+          "date": "2026-05-10",
+          "duration_minutes": 40,
+          "rto_met": true,
+          "restored": "vCenter configuration from the file-based backup, read back on a scratch appliance",
+          "scope": "config-only",
+          "tester": "Virtualization administrator",
+          "result": "pass",
+          "ticket": null,
+          "notes": "A configuration backup is not a VM restore. No VM was brought back.",
+          "age_days": 140,
+          "qualifies": false
+        },
+        {
+          "date": "2026-01-22",
+          "duration_minutes": 290,
+          "rto_met": true,
+          "restored": "vCenter appliance redeployed from the file-based backup and one mission VM restored to a scratch host",
+          "scope": "full",
+          "tester": "Virtualization administrator",
+          "result": "pass",
+          "ticket": "CHG-2026-0019",
+          "notes": "The last full restore on record.",
+          "age_days": 248,
+          "qualifies": true
+        }
+      ],
       "age_hours": 10.0,
-      "restore_age_days": 140,
+      "restore_age_days": 248,
+      "newest_test": {
+        "date": "2026-05-10",
+        "duration_minutes": 40,
+        "rto_met": true,
+        "restored": "vCenter configuration from the file-based backup, read back on a scratch appliance",
+        "scope": "config-only",
+        "tester": "Virtualization administrator",
+        "result": "pass",
+        "ticket": null,
+        "notes": "A configuration backup is not a VM restore. No VM was brought back.",
+        "age_days": 140,
+        "qualifies": false
+      },
+      "qualifying_test": {
+        "date": "2026-01-22",
+        "duration_minutes": 290,
+        "rto_met": true,
+        "restored": "vCenter appliance redeployed from the file-based backup and one mission VM restored to a scratch host",
+        "scope": "full",
+        "tester": "Virtualization administrator",
+        "result": "pass",
+        "ticket": "CHG-2026-0019",
+        "notes": "The last full restore on record.",
+        "age_days": 248,
+        "qualifies": true
+      },
       "rpo_met": true,
       "restore_met": false,
+      "restore_scope_ok": false,
+      "rto_met": true,
       "status": "breach",
       "reasons": [
-        "Last restore test was 140 days ago. Policy is 90 days."
-      ]
+        "Last restore test was 248 days ago. Policy is 90 days.",
+        "The newest restore test (2026-05-10) was config-only. Only a full restore that passed counts as a restore test."
+      ],
+      "flags": []
     },
     {
       "host": "rhel-mission01.lab.local",
@@ -1922,12 +2095,56 @@
       "last_restore_test": "2026-09-01",
       "restore_test_max_days": 90,
       "notes": "Last test restored a mission directory to a scratch VM.",
+      "restore_tests": [
+        {
+          "date": "2026-09-01",
+          "duration_minutes": 95,
+          "rto_met": true,
+          "restored": "Mission directory from the restic archive to a scratch VM, checked against the archive manifest",
+          "scope": "full",
+          "tester": "Linux systems administrator",
+          "result": "pass",
+          "ticket": "CHG-2026-0244",
+          "notes": "The mission service started on the scratch VM from the restored directory.",
+          "age_days": 26,
+          "qualifies": true
+        }
+      ],
       "age_hours": 12.3,
       "restore_age_days": 26,
+      "newest_test": {
+        "date": "2026-09-01",
+        "duration_minutes": 95,
+        "rto_met": true,
+        "restored": "Mission directory from the restic archive to a scratch VM, checked against the archive manifest",
+        "scope": "full",
+        "tester": "Linux systems administrator",
+        "result": "pass",
+        "ticket": "CHG-2026-0244",
+        "notes": "The mission service started on the scratch VM from the restored directory.",
+        "age_days": 26,
+        "qualifies": true
+      },
+      "qualifying_test": {
+        "date": "2026-09-01",
+        "duration_minutes": 95,
+        "rto_met": true,
+        "restored": "Mission directory from the restic archive to a scratch VM, checked against the archive manifest",
+        "scope": "full",
+        "tester": "Linux systems administrator",
+        "result": "pass",
+        "ticket": "CHG-2026-0244",
+        "notes": "The mission service started on the scratch VM from the restored directory.",
+        "age_days": 26,
+        "qualifies": true
+      },
       "rpo_met": true,
       "restore_met": true,
+      "restore_scope_ok": true,
+      "rto_met": true,
       "status": "ok",
-      "reasons": []
+      "reasons": [],
+      "flags": []
     },
     {
       "host": "rhel-repo01.lab.local",
@@ -1938,12 +2155,56 @@
       "last_restore_test": "2026-07-20",
       "restore_test_max_days": 90,
       "notes": "Repo sync is the thing the other hosts restore from. Test a package install from the copy, not just the snapshot.",
+      "restore_tests": [
+        {
+          "date": "2026-07-20",
+          "duration_minutes": 260,
+          "rto_met": true,
+          "restored": "Repository copy from the disk snapshot to a scratch VM, then a package install from the restored copy",
+          "scope": "full",
+          "tester": "Linux systems administrator",
+          "result": "pass",
+          "ticket": "CHG-2026-0197",
+          "notes": "A client installed a package from the restored copy, not just a file listing of the snapshot.",
+          "age_days": 69,
+          "qualifies": true
+        }
+      ],
       "age_hours": 11.8,
       "restore_age_days": 69,
+      "newest_test": {
+        "date": "2026-07-20",
+        "duration_minutes": 260,
+        "rto_met": true,
+        "restored": "Repository copy from the disk snapshot to a scratch VM, then a package install from the restored copy",
+        "scope": "full",
+        "tester": "Linux systems administrator",
+        "result": "pass",
+        "ticket": "CHG-2026-0197",
+        "notes": "A client installed a package from the restored copy, not just a file listing of the snapshot.",
+        "age_days": 69,
+        "qualifies": true
+      },
+      "qualifying_test": {
+        "date": "2026-07-20",
+        "duration_minutes": 260,
+        "rto_met": true,
+        "restored": "Repository copy from the disk snapshot to a scratch VM, then a package install from the restored copy",
+        "scope": "full",
+        "tester": "Linux systems administrator",
+        "result": "pass",
+        "ticket": "CHG-2026-0197",
+        "notes": "A client installed a package from the restored copy, not just a file listing of the snapshot.",
+        "age_days": 69,
+        "qualifies": true
+      },
       "rpo_met": true,
       "restore_met": true,
+      "restore_scope_ok": true,
+      "rto_met": true,
       "status": "ok",
-      "reasons": []
+      "reasons": [],
+      "flags": []
     }
   ],
   "attention": [
@@ -2064,7 +2325,7 @@
       "control": "backup",
       "cat": "",
       "clock": "breach",
-      "reason": "Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days.",
+      "reason": "Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days. The newest restore test (2026-06-01) took 10 hours 10 minutes. RTO is 8 hours.",
       "due": null
     },
     {
@@ -2076,7 +2337,7 @@
       "control": "backup",
       "cat": "",
       "clock": "breach",
-      "reason": "Last restore test was 140 days ago. Policy is 90 days.",
+      "reason": "Last restore test was 248 days ago. Policy is 90 days. The newest restore test (2026-05-10) was config-only. Only a full restore that passed counts as a restore test.",
       "due": null
     },
     {
@@ -2253,7 +2514,7 @@
       "Regressed since the August scan: RHEL-08-030180 on rhel-mission01. A regression restarts the clock. It does not inherit credit for the months it was clean.",
       "Closed since the last scan: RHEL-08-010550 on rhel-repo01.",
       "An exception that expires is an open finding the next morning. WN22-00-000380 on wsus01 expired and is still open.",
-      "Backups: Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days. (wsus01) Last restore test was 140 days ago. Policy is 90 days. (esxi01)",
+      "Backups: Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days. The newest restore test (2026-06-01) took 10 hours 10 minutes. RTO is 8 hours. (wsus01) Last restore test was 248 days ago. Policy is 90 days. The newest restore test (2026-05-10) was config-only. Only a full restore that passed counts as a restore test. (esxi01)",
       "Next bench visit is rhel-repo01: RHEL-08-010370, RHEL-08-010371, RHEL-08-020230. Import the lab GPG key, then set gpgcheck and localpkg_gpgcheck. Password length does not need a reboot. SSH root is already closed here."
     ]
   },
@@ -2280,9 +2541,9 @@
       },
       {
         "id": "backups",
-        "title": "RPO and restore tests are inside policy",
+        "title": "RPO, RTO, and restore tests are inside policy",
         "status": "fail",
-        "detail": "wsus01.lab.local, esxi01.lab.local"
+        "detail": "wsus01.lab.local: Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days. The newest restore test (2026-06-01) took 10 hours 10 minutes. RTO is 8 hours. esxi01.lab.local: Last restore test was 248 days ago. Policy is 90 days. The newest restore test (2026-05-10) was config-only. Only a full restore that passed counts as a restore test."
       },
       {
         "id": "runbooks",
@@ -2366,7 +2627,7 @@
         "tag": "smb1",
         "action": "refuse",
         "label": "Stopped",
-        "reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days.",
+        "reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days. The newest restore test (2026-06-01) took 10 hours 10 minutes. RTO is 8 hours.",
         "probe": null,
         "bundle": [],
         "as_of": "2026-09-27"

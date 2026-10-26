@@ -67,21 +67,47 @@ export type ExceptionRow = {
   finding_slug: string | null;
 };
 
+export type RestoreScope = "full" | "partial" | "config-only" | string;
+
+export type RestoreTest = {
+  date: string;
+  duration_minutes: number | null;
+  // Derived from duration_minutes against the record's rto_hours. Null when either is missing.
+  rto_met: boolean | null;
+  restored: string;
+  scope: RestoreScope;
+  tester: string;
+  result: "pass" | "fail" | string;
+  ticket: string | null;
+  notes: string;
+  age_days: number;
+  // A full restore that passed. Only these reset the restore-test clock.
+  qualifies: boolean;
+};
+
 export type Backup = {
   host: string;
   method: string;
   rpo_hours: number;
   rto_hours: number;
   last_success: string;
-  last_restore_test: string;
+  last_restore_test: string | null;
   restore_test_max_days: number;
   notes: string;
+  restore_tests: RestoreTest[];
+  newest_test: RestoreTest | null;
+  qualifying_test: RestoreTest | null;
   age_hours: number;
-  restore_age_days: number;
+  // Age of the newest qualifying test. Null when no test qualifies.
+  restore_age_days: number | null;
   rpo_met: boolean;
   restore_met: boolean;
+  // Null for a record that has a date but no restore test entries.
+  restore_scope_ok: boolean | null;
+  rto_met: boolean | null;
   status: string;
   reasons: string[];
+  flags: string[];
 };
 
 export type ControlFinding = {
