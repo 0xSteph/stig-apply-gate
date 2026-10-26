@@ -45,6 +45,7 @@
         src: "{{ baseline_backup_dir }}/{{ item | basename }}"
         dest: "{{ item }}"
         remote_src: true
+        mode: preserve
         validate: "{{ '/usr/sbin/sshd -t -f %s' if item == '/etc/ssh/sshd_config' else omit }}"
       loop: "{{ baseline_manifest.present }}"
       loop_control:

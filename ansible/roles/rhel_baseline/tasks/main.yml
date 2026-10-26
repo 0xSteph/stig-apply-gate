@@ -87,6 +87,7 @@
     src: "{{ item.path }}"
     dest: "{{ baseline_backup_dir }}/"
     remote_src: true
+    mode: preserve
   loop: "{{ saved_repo_files.files }}"
   loop_control:
     label: "{{ item.path }}"
@@ -107,6 +108,7 @@
     src: "{{ item.stat.path }}"
     dest: "{{ baseline_backup_dir }}/"
     remote_src: true
+    mode: preserve
   loop: "{{ config_stats.results }}"
   when: item.stat.exists
   loop_control:
