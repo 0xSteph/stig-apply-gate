@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 from datetime import date, timedelta
+from pathlib import PurePath
 
 from findings import __version__
 from findings.catalog import lookup
@@ -123,6 +125,7 @@ def build_ledger(
         "handoff": gates,
         "apply_gate": apply_gate,
         "stats": stats,
+        "controls": build_controls(findings),
         "sources": _sources(observations),
     }
 
@@ -705,6 +708,127 @@ def _stats(findings: list[dict], drift: dict) -> dict:
     }
 
 
+UNMAPPED = "unmapped"
+CLOCK_RANK = {"overdue": 0, "due_soon": 1, "on_track": 2, "not_reviewed": 3, "excepted": 4, "closed": 5}
+_CONTROL_ID = re.compile(r"^([A-Z]{2})-0*(\d+)(?:\s*\(\s*0*(\d+)\s*\))?")
+
+
+def normalize_control(value: str) -> str | None:
+    """`AC-2 (1)`, `AC-2(1)`, and `AC-02 (01)` all become `AC-2(1)`.
+
+    A statement part such as the `a` in `CM-7 a` is dropped; it is part of the
+    control, not a separate one. Returns None for text that is not a control id.
+    """
+    text = value.strip()
+    if "::" in text:
+        text = text.rsplit("::", 1)[1].strip()
+    match = _CONTROL_ID.match(text.upper())
+    if not match:
+        return None
+    family, number, enhancement = match.groups()
+    control = f"{family}-{int(number)}"
+    if enhancement is not None:
+        control += f"({int(enhancement)})"
+    return control
+
+
+def build_controls(findings: list[dict]) -> list[dict]:
+    """One entry per NIST SP 800-53 control behind the CCIs on the findings.
+
+    A finding with no CCI appears under a control called `unmapped`, so nothing
+    silently disappears from this view. So does a finding whose CCIs no scanner
+    tied to a control.
+
+    The control comes from the `nist` ids the scanner reported on that finding.
+    A checklist row carries CCIs but no control id. It takes the control another
+    finding in this ledger reported for the same CCI, counted only when that
+    finding carried a single CCI. Nothing is looked up outside the ledger.
+    """
+    by_cci: dict[str, set[str]] = defaultdict(set)
+    for finding in findings:
+        ccis = sorted(set(finding.get("cci") or []))
+        reported = _reported_controls(finding)
+        if len(ccis) == 1 and reported:
+            by_cci[ccis[0]] |= reported
+
+    entries: dict[str, dict] = {}
+    for finding in findings:
+        ccis = sorted(set(finding.get("cci") or []))
+        targets: dict[str, tuple[list[str], str]] = {}
+        if not ccis:
+            targets[UNMAPPED] = ([], "no_cci")
+        else:
+            reported = _reported_controls(finding)
+            if reported:
+                for control in reported:
+                    targets[control] = (ccis, "reported")
+            else:
+                for cci in ccis:
+                    for control in by_cci.get(cci, ()):
+                        targets.setdefault(control, ([], "same_cci"))[0].append(cci)
+                if not targets:
+                    targets[UNMAPPED] = (ccis, "no_control")
+        for control, (control_ccis, mapped_by) in targets.items():
+            entry = entries.setdefault(control, {"control": control, "ccis": set(), "findings": []})
+            entry["ccis"].update(control_ccis)
+            entry["findings"].append(
+                {
+                    "slug": finding["slug"],
+                    "host": finding["host"],
+                    "host_short": finding["host_short"],
+                    "control": finding["control"],
+                    "title": finding["title"],
+                    "cat": finding["cat"],
+                    "clock": finding["clock"],
+                    "due": finding["due"],
+                    "mapped_by": mapped_by,
+                }
+            )
+
+    rows = [_control_entry(entry) for entry in entries.values()]
+    rows.sort(key=lambda row: _control_sort_key(row["control"]))
+    return rows
+
+
+def _reported_controls(finding: dict) -> set[str]:
+    controls = {normalize_control(value) for value in finding.get("nist") or []}
+    controls.discard(None)
+    return controls
+
+
+def _control_entry(entry: dict) -> dict:
+    refs = sorted(
+        entry["findings"],
+        key=lambda item: (CLOCK_RANK.get(item["clock"], 9), item["due"] or "9999", item["host"], item["control"]),
+    )
+    clocks = [item["clock"] for item in refs]
+    open_clocks = [clock for clock in clocks if clock != "closed"]
+    dues = [item["due"] for item in refs if item["clock"] != "closed" and item["due"]]
+    control = entry["control"]
+    return {
+        "control": control,
+        "family": UNMAPPED if control == UNMAPPED else control.split("-", 1)[0],
+        "ccis": sorted(entry["ccis"]),
+        "findings": refs,
+        "open": len(open_clocks),
+        "overdue": clocks.count("overdue"),
+        "due_soon": clocks.count("due_soon"),
+        "excepted": clocks.count("excepted"),
+        "closed": clocks.count("closed"),
+        "worst_clock": min(clocks, key=lambda clock: CLOCK_RANK.get(clock, 9)),
+        "open_all_excepted": bool(open_clocks) and all(clock == "excepted" for clock in open_clocks),
+        "earliest_due": min(dues) if dues else None,
+    }
+
+
+def _control_sort_key(control: str) -> tuple:
+    if control == UNMAPPED:
+        return (1, "", 0, 0)
+    match = _CONTROL_ID.match(control)
+    family, number, enhancement = match.groups()
+    return (0, family, int(number), int(enhancement) if enhancement else 0)
+
+
 def _brief(findings, backups, drift, windows, today: date, site: dict) -> dict:
     overdue = [item for item in findings if item["clock"] == "overdue"]
     paragraphs = []
@@ -770,7 +894,7 @@ def _sources(observations: list[Observation]) -> list[dict]:
         if key in keys or not item.source_file:
             continue
         keys.add(key)
-        seen.append({"file": item.source_file, "source": item.source, "observed_at": item.observed_at.isoformat()})
+        seen.append({"file": PurePath(item.source_file).as_posix(), "source": item.source, "observed_at": item.observed_at.isoformat()})
     return seen
 
 
