@@ -71,10 +71,10 @@ def test_august_to_september_on_the_lab(tmp_path: Path, capsys):
     assert [item["id"] for item in delta["exceptions_expiring"]] == ["EX-014"]
     assert [item["id"] for item in delta["exceptions_expired"]] == ["EX-007"]
     assert [item["host"] for item in delta["hosts_missing"]] == ["vcenter01.lab.local"]
-    assert [(item["host"], item["before"], item["after"]) for item in delta["backup_changes"]] == [
-        ("wsus01.lab.local", "ok", "breach")
-    ]
-    assert "Last restore test" in _section(text, "Backups that changed status")
+    # wsus01 is a breach in both periods: its newest restore test took longer than its RTO,
+    # and that does not depend on the date. esxi01 is past its restore-test age in both.
+    assert delta["backup_changes"] == []
+    assert _section(text, "Backups that changed status").strip().endswith("none")
     assert _section(text, "Closed without a rescan").strip().endswith("none")
     assert "EX-007" in _section(text, "Exceptions that expired between")
 
@@ -144,7 +144,7 @@ def test_hand_edited_after_fills_every_section(tmp_path: Path, capsys):
     assert "rhel-repo01 RHEL-08-010370: probe -> allow" in gate
     assert "Before: " in gate and "signing key is imported" in gate
     backups = _section(text, "Backups that changed status")
-    assert "esxi01.lab.local: breach -> ok." in backups and "wsus01.lab.local: ok -> breach." in backups
+    assert "esxi01.lab.local: breach -> ok." in backups
     for title in (
         "New open rows",
         "Closed since",
