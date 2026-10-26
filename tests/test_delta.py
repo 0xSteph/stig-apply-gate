@@ -54,11 +54,17 @@ def test_august_to_september_on_the_lab(tmp_path: Path, capsys):
     text = out.read_text(encoding="utf-8")
     assert text in printed
     first = text.splitlines()[2]
-    assert first.startswith("Findings delta 2026-08-27 to 2026-09-27: 2 new open rows, 1 closed, 0 closed without a rescan, 1 regression")
+    assert first.startswith("Findings delta 2026-08-27 to 2026-09-27: 4 new open rows, 1 closed, 0 closed without a rescan, 1 regression")
 
     delta = compute_delta(json.loads(before.read_text()), json.loads(after.read_text()))
     # The audit row was closed in August and failed again in September: new open and a regression.
-    assert _keys(delta["new_open"]) == {("rhel-mission01", "CVE-2024-6387"), ("rhel-mission01", "RHEL-08-030180")}
+    # The vCenter and VM snapshots are dated 2026-09-20, so their open rows are new in September.
+    assert _keys(delta["new_open"]) == {
+        ("rhel-mission01", "CVE-2024-6387"),
+        ("rhel-mission01", "RHEL-08-030180"),
+        ("rhel-mission01", "VMCH-80-000197"),
+        ("vcenter01", "VCSA-80-000089"),
+    }
     assert "Closed in the earlier ledger." in _section(text, "New open rows")
     assert _keys(delta["closed"]) == {("rhel-repo01", "RHEL-08-010550")}
     assert delta["closed_without_rescan"] == []
@@ -70,7 +76,8 @@ def test_august_to_september_on_the_lab(tmp_path: Path, capsys):
     assert ("rhel-mission01", "CVE-2024-6387") in _keys(delta["due"])
     assert [item["id"] for item in delta["exceptions_expiring"]] == ["EX-014"]
     assert [item["id"] for item in delta["exceptions_expired"]] == ["EX-007"]
-    assert [item["host"] for item in delta["hosts_missing"]] == ["vcenter01.lab.local"]
+    # vcenter01 has a September snapshot now, so no host is missing from the period.
+    assert delta["hosts_missing"] == []
     # wsus01 is a breach in both periods: its newest restore test took longer than its RTO,
     # and that does not depend on the date. esxi01 is past its restore-test age in both.
     assert delta["backup_changes"] == []
@@ -139,7 +146,7 @@ def test_hand_edited_after_fills_every_section(tmp_path: Path, capsys):
     assert "0 closed without a rescan" not in text.splitlines()[2]
     assert "wsus01 WN22-AC-000070" in _section(text, "Open rows gone from the later ledger")
     missing = _section(text, "Hosts missing from the period")
-    assert "ad01.lab.local" in missing and "vcenter01.lab.local" in missing
+    assert "ad01.lab.local" in missing
     gate = _section(text, "Gate decisions that changed")
     assert "rhel-repo01 RHEL-08-010370: probe -> allow" in gate
     assert "Before: " in gate and "signing key is imported" in gate
