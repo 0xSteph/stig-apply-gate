@@ -1,0 +1,25 @@
+---
+# The signed gate refuses RHEL-08-010370 (tag gpgcheck) on rhel-repo01.
+# site.yml --tags gpgcheck must get past the signature check and stop at the refusal,
+# before the role chooses or creates a backup directory.
+- name: Run site.yml with a gate that refuses gpgcheck
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Run site.yml --tags gpgcheck
+      ansible.builtin.import_tasks: ../shared/tasks/run_playbook.yml
+      vars:
+        gate_test_playbook: site.yml
+        gate_test_tags: gpgcheck
+
+    - name: Check that the role stopped at the refusal
+      ansible.builtin.assert:
+        that:
+          - gate_test_run.rc != 0
+          - "'The apply gate was not verified' not in gate_test_run.stdout"
+          - "'TASK [rhel_baseline : Stop when the gate refuses this host]' in gate_test_run.stdout"
+          - "'RHEL-08-010370' in gate_test_run.stdout"
+          - "'TASK [rhel_baseline : Create the backup directory]' not in gate_test_run.stdout"
+          - gate_test_run.stdout is search('rhel-repo01[.]lab[.]local +: ok=[0-9]+ +changed=0 ')
+        fail_msg: The refused control did not stop site.yml before the backup. Read the playbook output above.

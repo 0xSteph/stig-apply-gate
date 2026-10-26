@@ -1,0 +1,22 @@
+---
+# Fingerprints every file roles/rhel_baseline saves or edits on the host.
+# Sets gate_test_file_hashes: {path: sha256}, with "absent" for a file that does not exist.
+- name: Find repository files to fingerprint
+  ansible.builtin.find:
+    paths: /etc/yum.repos.d
+    patterns: "*.repo"
+  register: gate_test_repo_files
+
+- name: Hash the files the role may edit
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    get_checksum: true
+    checksum_algorithm: sha256
+  loop: "{{ (gate_test_repo_files.files | map(attribute='path') | sort) + ['/etc/dnf/dnf.conf', '/etc/security/pwquality.conf', '/etc/ssh/sshd_config'] }}"
+  register: gate_test_file_stats
+
+- name: Collect the hashes by path
+  ansible.builtin.set_fact:
+    gate_test_file_hashes: >-
+      {{ dict(gate_test_file_stats.results | map(attribute='item')
+              | zip(gate_test_file_stats.results | map(attribute='stat.checksum', default='absent'))) }}

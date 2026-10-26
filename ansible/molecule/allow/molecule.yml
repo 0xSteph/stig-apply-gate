@@ -1,0 +1,42 @@
+---
+# allow: a signed gate that allows gpgcheck, localpkg, and pwquality and holds ssh-root for a
+# change window. --tags ssh-root must stop. --tags gpgcheck,localpkg,pwquality must edit the
+# files and save the originals. revert.yml must then put back every byte.
+# Run from ansible/: molecule test -s allow
+driver:
+  name: docker
+platforms:
+  # The gate keys decisions by FQDN, so the container carries the lab name.
+  # Set MOLECULE_IMAGE to try another RHEL 9 compatible image.
+  - name: rhel-repo01.lab.local
+    image: "${MOLECULE_IMAGE:-registry.access.redhat.com/ubi9/ubi}"
+    pre_build_image: true
+    privileged: false
+    command: sleep infinity
+    groups:
+      - rhel
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      all:
+        findings_tier: lab
+        findings_signer_identity: findings-register
+        findings_gate_file: "{{ lookup('ansible.builtin.env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}/apply-gate.json"
+        findings_allowed_signers: "{{ lookup('ansible.builtin.env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}/allowed_signers"
+        findings_ledger_file: ""
+        gate_test_sign_gate: true
+        gate_test_import_signing_key: true
+verifier:
+  name: ansible
+scenario:
+  name: allow
+  # No idempotence step: a second converge would write a second backup, which is by design.
+  test_sequence:
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy

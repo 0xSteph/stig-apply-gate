@@ -1,0 +1,11 @@
+---
+# The unsigned run must leave rhel-repo01 as prepare left it: no backup, no edited byte.
+- name: Check that the unsigned run left rhel-repo01 untouched
+  hosts: rhel
+  gather_facts: false
+  tasks:
+    - name: Fingerprint the files after the stopped run
+      ansible.builtin.import_tasks: ../shared/tasks/checksums.yml
+
+    - name: Compare with what prepare recorded
+      ansible.builtin.import_tasks: ../shared/tasks/assert_untouched.yml

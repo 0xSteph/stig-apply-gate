@@ -1,0 +1,4 @@
+---
+# Shared prepare: signs this scenario's gate on the controller and sets up rhel-repo01 in the container.
+- name: Prepare the controller and rhel-repo01.lab.local
+  ansible.builtin.import_playbook: ../shared/prepare.yml

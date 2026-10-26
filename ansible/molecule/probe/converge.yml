@@ -1,0 +1,24 @@
+---
+# The signed gate says check first for RHEL-08-010370 (tag gpgcheck): `rpm -q gpg-pubkey`.
+# Prepare left no key in the rpm database, so the probe fails and the role stops before the backup.
+- name: Run site.yml with a gate that probes for the signing key
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Run site.yml --tags gpgcheck
+      ansible.builtin.import_tasks: ../shared/tasks/run_playbook.yml
+      vars:
+        gate_test_playbook: site.yml
+        gate_test_tags: gpgcheck
+
+    - name: Check that the role stopped at the predecessor check
+      ansible.builtin.assert:
+        that:
+          - gate_test_run.rc != 0
+          - "'The apply gate was not verified' not in gate_test_run.stdout"
+          - "'TASK [rhel_baseline : Run a predecessor check before the edit]' in gate_test_run.stdout"
+          - "'gpg-pubkey' in gate_test_run.stdout"
+          - "'TASK [rhel_baseline : Create the backup directory]' not in gate_test_run.stdout"
+          - gate_test_run.stdout is search('rhel-repo01[.]lab[.]local +: ok=[0-9]+ +changed=0 ')
+        fail_msg: The failed probe did not stop site.yml before the backup. Read the playbook output above.

@@ -1,0 +1,21 @@
+---
+# The refused run must leave rhel-repo01 as prepare left it: no backup, no edited byte.
+- name: Check that the refused run left rhel-repo01 untouched
+  hosts: rhel
+  gather_facts: false
+  tasks:
+    - name: Fingerprint the files after the stopped run
+      ansible.builtin.import_tasks: ../shared/tasks/checksums.yml
+
+    - name: Compare with what prepare recorded
+      ansible.builtin.import_tasks: ../shared/tasks/assert_untouched.yml
+
+    - name: Read the lab repository file
+      ansible.builtin.slurp:
+        src: /etc/yum.repos.d/lab.repo
+      register: gate_test_lab_repo
+
+    - name: Check that GPG checking is still off on the lab repository
+      ansible.builtin.assert:
+        that:
+          - (gate_test_lab_repo.content | b64decode) is search('(?m)^gpgcheck=0$')

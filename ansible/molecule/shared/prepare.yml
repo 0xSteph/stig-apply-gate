@@ -1,0 +1,272 @@
+---
+# Shared prepare for every scenario under ansible/molecule/. Each scenario's prepare.yml imports it.
+#
+# Controller: a throwaway ed25519 key and an allowed_signers file in the scenario's ephemeral
+# directory, the scenario's gate.json copied next to them as apply-gate.json, and a signature
+# unless gate_test_sign_gate is false. Nothing is written into the checkout.
+#
+# Container: the files roles/rhel_baseline saves and edits, in the state the lab repo host is in
+# (gpgcheck=0, PermitRootLogin yes, no signing key imported). Their sha256 is recorded on the
+# controller, so verify can show that a refused run, or a revert, left every byte where it was.
+- name: Sign the scenario gate on the controller
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    gate_test_ephemeral: "{{ lookup('ansible.builtin.env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}"
+    gate_test_scenario_dir: "{{ lookup('ansible.builtin.env', 'MOLECULE_SCENARIO_DIRECTORY') }}"
+    gate_test_repo_root: "{{ gate_test_scenario_dir }}/../../.."
+    gate_test_key: "{{ gate_test_ephemeral }}/gate-key/findings-gate"
+  tasks:
+    - name: Check that Molecule set the scenario directories
+      ansible.builtin.assert:
+        that:
+          - gate_test_ephemeral | length > 0
+          - gate_test_scenario_dir | length > 0
+        fail_msg: Run this through Molecule, for example `molecule test -s unsigned` from ansible/.
+
+    - name: Create a directory for the throwaway signing key
+      ansible.builtin.file:
+        path: "{{ gate_test_key | dirname }}"
+        state: directory
+        mode: "0700"
+
+    - name: Look for a signing key from an earlier run
+      ansible.builtin.stat:
+        path: "{{ gate_test_key }}"
+      register: gate_test_key_stat
+
+    - name: Create a throwaway ed25519 signing key
+      ansible.builtin.command:
+        argv: ["ssh-keygen", "-t", "ed25519", "-N", "", "-C", "molecule-gate-test", "-q", "-f", "{{ gate_test_key }}"]
+      when: not gate_test_key_stat.stat.exists
+      changed_when: true
+
+    - name: Read the public half of the signing key
+      ansible.builtin.slurp:
+        src: "{{ gate_test_key }}.pub"
+      register: gate_test_pub
+
+    - name: Split the public key line
+      ansible.builtin.set_fact:
+        gate_test_pub_fields: "{{ gate_test_pub.content | b64decode | split }}"
+
+    - name: Write allowed_signers for the identity the play checks
+      ansible.builtin.copy:
+        dest: "{{ findings_allowed_signers }}"
+        content: "{{ findings_signer_identity }} {{ gate_test_pub_fields[0] }} {{ gate_test_pub_fields[1] }}\n"
+        mode: "0644"
+
+    - name: Copy the scenario gate into the ephemeral directory
+      ansible.builtin.copy:
+        src: "{{ gate_test_scenario_dir }}/gate.json"
+        dest: "{{ findings_gate_file }}"
+        mode: "0644"
+
+    - name: Remove a signature left by an earlier run
+      ansible.builtin.file:
+        path: "{{ findings_gate_file }}.sig"
+        state: absent
+
+    - name: Sign the gate with the throwaway key
+      ansible.builtin.command:
+        argv: ["{{ ansible_playbook_python }}", "-m", "findings", "sign", "--gate", "{{ findings_gate_file }}", "--key", "{{ gate_test_key }}"]
+        chdir: "{{ gate_test_repo_root }}"
+      when: gate_test_sign_gate | bool
+      changed_when: true
+
+    - name: Look for the gate signature
+      ansible.builtin.stat:
+        path: "{{ findings_gate_file }}.sig"
+      register: gate_test_sig
+
+    - name: Check that the gate is signed only when the scenario says so
+      ansible.builtin.assert:
+        that:
+          - gate_test_sig.stat.exists == (gate_test_sign_gate | bool)
+        fail_msg: "gate_test_sign_gate is {{ gate_test_sign_gate }} but the signature exists is {{ gate_test_sig.stat.exists }}"
+
+    - name: Verify the signed gate the way site.yml will
+      ansible.builtin.command:
+        argv:
+          - "{{ ansible_playbook_python }}"
+          - "-m"
+          - "findings"
+          - "verify-gate"
+          - "--gate"
+          - "{{ findings_gate_file }}"
+          - "--allowed-signers"
+          - "{{ findings_allowed_signers }}"
+          - "--identity"
+          - "{{ findings_signer_identity }}"
+        chdir: "{{ gate_test_repo_root }}"
+      when: gate_test_sign_gate | bool
+      changed_when: false
+
+- name: Put rhel-repo01.lab.local in the state the lab repo host is in
+  hosts: rhel
+  gather_facts: false
+  vars:
+    gate_test_gnupg: /root/gate-test-gnupg
+    gate_test_key_export: /root/gate-test-signing-key.asc
+  tasks:
+    # sudo: site.yml and revert.yml run with become. gnupg2: rpm_key and the throwaway key.
+    # openssh-server: revert.yml checks sshd_config with /usr/sbin/sshd -t before restoring it.
+    - name: Install sudo, gpg, and sshd
+      ansible.builtin.dnf:
+        name:
+          - sudo
+          - gnupg2
+          - openssh-server
+        state: present
+
+    - name: Generate sshd host keys so sshd -t can check a config
+      ansible.builtin.command:
+        argv: ["ssh-keygen", "-A"]
+      register: gate_test_hostkeys
+      changed_when: "'generating' in gate_test_hostkeys.stdout"
+
+    - name: Make sure the config directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - /etc/yum.repos.d
+        - /etc/dnf
+        - /etc/security
+        - /etc/ssh
+
+    # enabled=0 keeps dnf from trying to reach a repository that is not there.
+    # The role edits gpgcheck in every *.repo file whether or not it is enabled.
+    - name: Write the lab repository with GPG checks off
+      ansible.builtin.copy:
+        dest: /etc/yum.repos.d/lab.repo
+        mode: "0644"
+        content: |
+          # Integration Lab packages, published from rhel-repo01.lab.local
+          [lab]
+          name=Integration Lab packages
+          baseurl=http://rhel-repo01.lab.local/repo/
+          enabled=0
+          gpgcheck=0
+
+    - name: Write dnf.conf with local package checks off
+      ansible.builtin.copy:
+        dest: /etc/dnf/dnf.conf
+        mode: "0644"
+        content: |
+          [main]
+          gpgcheck=1
+          installonly_limit=3
+          clean_requirements_on_remove=True
+          best=True
+          skip_if_unavailable=False
+          localpkg_gpgcheck=False
+
+    - name: Write pwquality.conf with an 8 character minimum
+      ansible.builtin.copy:
+        dest: /etc/security/pwquality.conf
+        mode: "0644"
+        content: |
+          # Configuration for systemwide password quality limits
+          # minlen = 8
+          minlen = 8
+
+    - name: Write sshd_config that allows root logons
+      ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config
+        mode: "0600"
+        validate: /usr/sbin/sshd -t -f %s
+        content: |
+          # Integration Lab repo host. Root logons are still allowed here.
+          PermitRootLogin yes
+          PasswordAuthentication no
+          Subsystem sftp /usr/libexec/openssh/sftp-server
+
+    # This is the probe the gate names for gpgcheck. The rpm_key module cannot list keys.
+    - name: List signing keys already in the rpm database  # noqa: command-instead-of-module
+      ansible.builtin.command:
+        argv: ["rpm", "--query", "gpg-pubkey"]
+      register: gate_test_keys_before
+      changed_when: false
+      failed_when: gate_test_keys_before.rc not in [0, 1]
+
+    # The image or the dnf install above may have imported the Red Hat release key.
+    # Every scenario starts with none, like the lab repo host in the build notes.
+    - name: Remove imported signing keys
+      ansible.builtin.rpm_key:
+        key: "{{ item.split('-')[2] }}"
+        state: absent
+      loop: "{{ gate_test_keys_before.stdout_lines if gate_test_keys_before.rc == 0 else [] }}"
+
+    - name: Import a throwaway signing key so a probe for it would pass
+      when: gate_test_import_signing_key | bool
+      block:
+        - name: Create a GnuPG home for the throwaway key
+          ansible.builtin.file:
+            path: "{{ gate_test_gnupg }}"
+            state: directory
+            mode: "0700"
+
+        - name: Write the key parameters
+          ansible.builtin.copy:
+            dest: "{{ gate_test_gnupg }}/keyparams"
+            mode: "0600"
+            content: |
+              %no-protection
+              Key-Type: RSA
+              Key-Length: 2048
+              Key-Usage: sign
+              Name-Real: Integration Lab signing key (molecule)
+              Name-Email: signing@lab.local
+              Expire-Date: 0
+              %commit
+
+        - name: Generate the throwaway signing key
+          ansible.builtin.command:
+            argv: ["gpg", "--homedir", "{{ gate_test_gnupg }}", "--batch", "--gen-key", "{{ gate_test_gnupg }}/keyparams"]
+          changed_when: true
+
+        - name: Export the public key
+          ansible.builtin.command:
+            argv:
+              - "gpg"
+              - "--homedir"
+              - "{{ gate_test_gnupg }}"
+              - "--batch"
+              - "--yes"
+              - "--armor"
+              - "--output"
+              - "{{ gate_test_key_export }}"
+              - "--export"
+              - "signing@lab.local"
+          changed_when: true
+
+        - name: Import the public key into the rpm database
+          ansible.builtin.rpm_key:
+            key: "{{ gate_test_key_export }}"
+            state: present
+
+    - name: Check signing keys after prepare  # noqa: command-instead-of-module
+      ansible.builtin.command:
+        argv: ["rpm", "--query", "gpg-pubkey"]
+      register: gate_test_keys_after
+      changed_when: false
+      failed_when: false
+
+    - name: Check that a signing key is imported only when the scenario says so
+      ansible.builtin.assert:
+        that:
+          - (gate_test_keys_after.rc == 0) == (gate_test_import_signing_key | bool)
+        fail_msg: "gate_test_import_signing_key is {{ gate_test_import_signing_key }}; rpm -q gpg-pubkey said: {{ gate_test_keys_after.stdout }}"
+
+    - name: Fingerprint the files before converge
+      ansible.builtin.import_tasks: tasks/checksums.yml
+
+    - name: Record the fingerprints on the controller
+      ansible.builtin.copy:
+        dest: "{{ lookup('ansible.builtin.env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}/baseline-sha256.json"
+        content: "{{ gate_test_file_hashes | to_nice_json }}\n"
+        mode: "0644"
+      delegate_to: localhost

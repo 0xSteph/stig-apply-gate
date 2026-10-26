@@ -1,0 +1,57 @@
+{
+  "decisions": [
+    {
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "control": "RHEL-08-010370",
+      "slug": "rhel-repo01--RHEL-08-010370",
+      "tag": "gpgcheck",
+      "action": "allow",
+      "label": "Apply",
+      "reason": "No signature, dependency, or predecessor blocks this edit.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "control": "RHEL-08-010371",
+      "slug": "rhel-repo01--RHEL-08-010371",
+      "tag": "localpkg",
+      "action": "allow",
+      "label": "Apply",
+      "reason": "No signature, dependency, or predecessor blocks this edit.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "control": "RHEL-08-020230",
+      "slug": "rhel-repo01--RHEL-08-020230",
+      "tag": "pwquality",
+      "action": "allow",
+      "label": "Apply",
+      "reason": "No signature, dependency, or predecessor blocks this edit.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    },
+    {
+      "host": "rhel-repo01.lab.local",
+      "host_short": "rhel-repo01",
+      "control": "RHEL-08-010550",
+      "slug": "rhel-repo01--RHEL-08-010550",
+      "tag": "ssh-root",
+      "action": "window",
+      "label": "Someone there",
+      "reason": "This restarts a service or wants a reboot. An unattended run will not touch it. Someone has to be at the console.",
+      "probe": null,
+      "bundle": [],
+      "as_of": "2026-09-27"
+    }
+  ],
+  "unscanned": []
+}

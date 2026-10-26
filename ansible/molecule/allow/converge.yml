@@ -1,0 +1,61 @@
+---
+# The signed gate allows gpgcheck, localpkg, and pwquality and holds ssh-root for a change window.
+# First --tags ssh-root without findings_one_window: it must stop before the backup.
+# Then the three allowed tags: they must run cleanly.
+- name: Run site.yml --tags ssh-root without a change window
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Run site.yml --tags ssh-root
+      ansible.builtin.import_tasks: ../shared/tasks/run_playbook.yml
+      vars:
+        gate_test_playbook: site.yml
+        gate_test_tags: ssh-root
+
+    - name: Check that the window decision stopped the run
+      ansible.builtin.assert:
+        that:
+          - gate_test_run.rc != 0
+          - "'The apply gate was not verified' not in gate_test_run.stdout"
+          - "'TASK [rhel_baseline : Stop a restart that nobody is attending]' in gate_test_run.stdout"
+          - "'RHEL-08-010550' in gate_test_run.stdout"
+          - "'TASK [rhel_baseline : Create the backup directory]' not in gate_test_run.stdout"
+          - "'TASK [rhel_baseline : Refuse direct SSH logons as root]' not in gate_test_run.stdout"
+        fail_msg: "The ssh-root run was not stopped without findings_one_window. Read the playbook output above."
+
+- name: Check that the stopped ssh-root run left no backup
+  hosts: rhel
+  gather_facts: false
+  tasks:
+    - name: Look for a backup directory
+      ansible.builtin.stat:
+        path: /var/backups/findings-register
+      register: gate_test_backup_root
+
+    - name: Check that no backup directory exists yet
+      ansible.builtin.assert:
+        that:
+          - not gate_test_backup_root.stat.exists
+        fail_msg: The ssh-root run created /var/backups/findings-register before it was stopped.
+
+- name: Run site.yml with the tags the gate allows
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Run site.yml --tags gpgcheck,localpkg,pwquality
+      ansible.builtin.import_tasks: ../shared/tasks/run_playbook.yml
+      vars:
+        gate_test_playbook: site.yml
+        gate_test_tags: gpgcheck,localpkg,pwquality
+
+    - name: Check that the allowed run finished
+      ansible.builtin.assert:
+        that:
+          - gate_test_run.rc == 0
+          - "'TASK [rhel_baseline : Record this backup as the latest]' in gate_test_run.stdout"
+          - "'TASK [rhel_baseline : Require GPG checks on repo files]' in gate_test_run.stdout"
+          - "'TASK [rhel_baseline : Refuse direct SSH logons as root]' not in gate_test_run.stdout"
+          - gate_test_run.stdout is search('rhel-repo01[.]lab[.]local +: ok=[0-9]+ +changed=[1-9][0-9]* +unreachable=0 +failed=0 ')
+        fail_msg: The allowed tags did not apply. Read the playbook output above.

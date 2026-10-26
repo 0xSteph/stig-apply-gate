@@ -1,0 +1,45 @@
+---
+# Runs a playbook from ansible/ against the Molecule container the way an operator would:
+# ansible-playbook on the command line, with --limit and --tags. The exit code and output land in
+# gate_test_run and the caller asserts on them, so a run the gate must stop can be tested without
+# failing the Molecule step itself.
+#
+# Inputs: gate_test_playbook (a path under ansible/, for example site.yml) and, optionally,
+# gate_test_tags (for example gpgcheck,localpkg,pwquality).
+#
+# site.yml sets the gate variables as play vars, which outrank inventory group_vars, so they are
+# passed again here with -e. findings_tier comes from the Molecule inventory as it would in the lab.
+- name: Run a playbook from ansible/ against rhel-repo01.lab.local
+  vars:
+    gate_test_ephemeral: "{{ lookup('ansible.builtin.env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}"
+    gate_test_inventory: >-
+      {{ lookup('ansible.builtin.env', 'MOLECULE_INVENTORY_FILE')
+         | default(gate_test_ephemeral ~ '/inventory/ansible_inventory.yml', true) | dirname }}
+    gate_test_repo_root: "{{ lookup('ansible.builtin.env', 'MOLECULE_SCENARIO_DIRECTORY') }}/../../.."
+    gate_test_extra_vars:
+      findings_gate_file: "{{ findings_gate_file }}"
+      findings_allowed_signers: "{{ findings_allowed_signers }}"
+      findings_signer_identity: "{{ findings_signer_identity }}"
+      findings_ledger_file: "{{ findings_ledger_file }}"
+  block:
+    - name: Run ansible-playbook
+      ansible.builtin.command:
+        argv: >-
+          {{ ['ansible-playbook',
+              '-i', gate_test_inventory,
+              gate_test_repo_root ~ '/ansible/' ~ gate_test_playbook,
+              '--limit', 'rhel-repo01.lab.local',
+              '-e', gate_test_extra_vars | to_json]
+             + (['--tags', gate_test_tags] if (gate_test_tags | default('') | length > 0) else []) }}
+        chdir: "{{ gate_test_repo_root }}"
+      environment:
+        ANSIBLE_FORCE_COLOR: "0"
+        ANSIBLE_NOCOLOR: "1"
+        ANSIBLE_STDOUT_CALLBACK: ansible.builtin.default
+      register: gate_test_run
+      changed_when: gate_test_run.rc == 0
+      failed_when: false
+
+    - name: Show what the playbook printed
+      ansible.builtin.debug:
+        var: gate_test_run.stdout_lines

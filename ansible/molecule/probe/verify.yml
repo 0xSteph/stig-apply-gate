@@ -1,0 +1,25 @@
+---
+# The failed probe must leave rhel-repo01 as prepare left it: no backup, no edited byte,
+# and still no signing key in the rpm database.
+- name: Check that the failed probe left rhel-repo01 untouched
+  hosts: rhel
+  gather_facts: false
+  tasks:
+    - name: Fingerprint the files after the stopped run
+      ansible.builtin.import_tasks: ../shared/tasks/checksums.yml
+
+    - name: Compare with what prepare recorded
+      ansible.builtin.import_tasks: ../shared/tasks/assert_untouched.yml
+
+    - name: Run the probe the gate names  # noqa: command-instead-of-module
+      ansible.builtin.command:
+        argv: ["rpm", "-q", "gpg-pubkey"]
+      register: gate_test_probe
+      changed_when: false
+      failed_when: false
+
+    - name: Check that the probe still fails
+      ansible.builtin.assert:
+        that:
+          - gate_test_probe.rc != 0
+        fail_msg: "rpm -q gpg-pubkey now passes, so this scenario no longer tests a failed probe: {{ gate_test_probe.stdout }}"
