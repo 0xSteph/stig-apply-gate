@@ -107,8 +107,8 @@ def _specs() -> list[dict]:
             "id": "wsus-backup",
             "title": "WSUS backup back inside policy",
             "change": (
-                "On the copy only, the WSUS last good backup is 27 Sep 2026 02:00 UTC and the restore test is 1 Sep 2026. "
-                "Both the RPO and the restore-test window have to be inside policy. Moving only the backup age leaves the stop in place."
+                "On the copy only, the WSUS last good backup is 27 Sep 2026 02:00 UTC and a full restore test on 1 Sep 2026 passed in 7 hours against an 8-hour RTO. "
+                "The RPO, the restore-test window, and the RTO all have to be inside policy. Moving only the backup age leaves the stop in place."
             ),
             "meaning": (
                 "The backup stop lifts. The row does not become an unattended apply. "
@@ -236,6 +236,19 @@ def _wsus_backup(inputs: dict) -> None:
         if item["host"].lower().startswith("wsus"):
             item["last_success"] = "2026-09-27T02:00:00Z"
             item["last_restore_test"] = "2026-09-01"
+            if "restore_tests" in item:
+                item["restore_tests"] = [
+                    {
+                        "date": "2026-09-01",
+                        "duration_minutes": 420,
+                        "restored": "WSUS database and the update content volume to an isolated VM",
+                        "scope": "full",
+                        "tester": "Windows systems administrator",
+                        "result": "pass",
+                        "notes": "Rehearsal only. A full restore inside the RTO.",
+                    },
+                    *item["restore_tests"],
+                ]
 
 
 def _exception_lapsed(inputs: dict) -> None:

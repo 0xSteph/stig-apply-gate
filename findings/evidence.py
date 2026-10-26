@@ -23,6 +23,9 @@ def write_evidence(ledger: dict, out: Path) -> None:
     (out / "drift.md").write_text(_drift_md(ledger), encoding="utf-8")
     (out / "exceptions.md").write_text(_exceptions_md(ledger), encoding="utf-8")
     (out / "handoff.md").write_text(_handoff_md(ledger), encoding="utf-8")
+    backups = ledger.get("backups") or []
+    _write_backups_csv(out / "backups.csv", backups)
+    (out / "backups.md").write_text(_backups_md(ledger, backups), encoding="utf-8")
     (out / "attestation.json").write_text(
         json.dumps(
             {
@@ -312,3 +315,158 @@ def _handoff_md(ledger: dict) -> str:
         lines.append(f"- **{gate['status'].upper()}** {gate['title']}. {gate['detail']}")
     lines.append("")
     return "\n".join(lines)
+
+
+BACKUP_FIELDS = [
+    "host",
+    "method",
+    "status",
+    "rpo_hours",
+    "rpo_met",
+    "last_success",
+    "last_success_age_hours",
+    "restore_test_max_days",
+    "restore_met",
+    "qualifying_test_date",
+    "qualifying_test_age_days",
+    "qualifying_test_scope",
+    "qualifying_test_result",
+    "qualifying_test_duration_minutes",
+    "newest_test_date",
+    "newest_test_scope",
+    "newest_test_result",
+    "newest_test_duration_minutes",
+    "rto_hours",
+    "rto_met",
+    "restore_scope_ok",
+    "newest_test_restored",
+    "flags",
+    "reasons",
+]
+
+
+def _yes_no(value) -> str:
+    if value is None:
+        return "unknown"
+    return "yes" if value else "no"
+
+
+def _blank(value) -> object:
+    return "" if value is None else value
+
+
+def _write_backups_csv(path: Path, backups: list[dict]) -> None:
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=BACKUP_FIELDS)
+        writer.writeheader()
+        for row in backups:
+            qualifying = row.get("qualifying_test") or {}
+            newest = row.get("newest_test") or {}
+            # A record with no entries still carries a date; it is reported, with scope unknown.
+            qualifying_date = qualifying.get("date") or ("" if row.get("restore_tests") else row.get("last_restore_test") or "")
+            writer.writerow(
+                {
+                    "host": row["host"],
+                    "method": row["method"],
+                    "status": row["status"],
+                    "rpo_hours": row["rpo_hours"],
+                    "rpo_met": _yes_no(row["rpo_met"]),
+                    "last_success": row["last_success"],
+                    "last_success_age_hours": row["age_hours"],
+                    "restore_test_max_days": row["restore_test_max_days"],
+                    "restore_met": _yes_no(row["restore_met"]),
+                    "qualifying_test_date": qualifying_date,
+                    "qualifying_test_age_days": _blank(row.get("restore_age_days")),
+                    "qualifying_test_scope": qualifying.get("scope", ""),
+                    "qualifying_test_result": qualifying.get("result", ""),
+                    "qualifying_test_duration_minutes": _blank(qualifying.get("duration_minutes")),
+                    "newest_test_date": newest.get("date", ""),
+                    "newest_test_scope": newest.get("scope", ""),
+                    "newest_test_result": newest.get("result", ""),
+                    "newest_test_duration_minutes": _blank(newest.get("duration_minutes")),
+                    "rto_hours": _blank(row.get("rto_hours")),
+                    "rto_met": _yes_no(row.get("rto_met")),
+                    "restore_scope_ok": _yes_no(row.get("restore_scope_ok")),
+                    "newest_test_restored": newest.get("restored", ""),
+                    "flags": " ".join(row.get("flags") or []),
+                    "reasons": " ".join(row["reasons"]),
+                }
+            )
+
+
+def _backups_md(ledger: dict, backups: list[dict]) -> str:
+    lines = [
+        "# Backups",
+        "",
+        f"As of {ledger.get('generated_for', '')}. RPO is measured to noon on that day. "
+        "A restore test counts only when it was a full restore that passed. A config-only or partial restore, "
+        "or a failed one, is listed but does not reset the restore-test clock. RTO is checked against the newest test's duration.",
+        "",
+    ]
+    if not backups:
+        lines.append("No backup records.")
+        lines.append("")
+        return "\n".join(lines)
+    lines.append(
+        "| Host | Method | RPO | Last good | Newest qualifying restore test | Scope | Duration vs RTO | Result | Status |"
+    )
+    lines.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+    for row in backups:
+        qualifying = row.get("qualifying_test")
+        rpo = f"{row['rpo_hours']}h, {'met' if row['rpo_met'] else 'missed'}"
+        if qualifying:
+            test = f"{qualifying['date']} ({row['restore_age_days']} days ago)"
+        elif row.get("restore_tests"):
+            test = "none qualifies"
+        elif row.get("last_restore_test"):
+            test = f"{row['last_restore_test']} ({row['restore_age_days']} days ago, scope not recorded)"
+        else:
+            test = "none on record"
+        scope = qualifying["scope"] if qualifying else ""
+        result = qualifying["result"] if qualifying else ""
+        lines.append(
+            f"| {row['host']} | {row['method']} | {rpo} | {row['age_hours']} h ago | {test} | {scope} | "
+            f"{_rto_cell(qualifying, row.get('rto_hours'))} | {result} | {row['status']} |"
+        )
+    lines.append("")
+    for row in backups:
+        lines.append(f"## {row['host']} — {row['status']}")
+        lines.append("")
+        if row["reasons"]:
+            for reason in row["reasons"]:
+                lines.append(f"- {reason}")
+        else:
+            lines.append("- RPO, RTO, and the restore-test window are inside policy.")
+        for flag in row.get("flags") or []:
+            if flag == "restore_date_mismatch":
+                lines.append(
+                    "- Flag: restore_date_mismatch. last_restore_test does not match the newest restore test entry. The entries were used."
+                )
+            else:
+                lines.append(f"- Flag: {flag}.")
+        lines.append("")
+        tests = row.get("restore_tests") or []
+        if tests:
+            lines.append("| Date | Scope | Duration vs RTO | Result | Counts | Restored | Tester | Ticket |")
+            lines.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
+            for test in tests:
+                lines.append(
+                    f"| {test['date']} | {test['scope']} | {_rto_cell(test, row.get('rto_hours'))} | {test['result']} | "
+                    f"{'yes' if test['qualifies'] else 'no'} | {test['restored']} | {test['tester']} | {test.get('ticket') or ''} |"
+                )
+            lines.append("")
+        if row.get("notes"):
+            lines.append(row["notes"])
+            lines.append("")
+    return "\n".join(lines)
+
+
+def _rto_cell(test: dict | None, rto_hours) -> str:
+    if not test:
+        return ""
+    duration = test.get("duration_minutes")
+    if duration is None:
+        return f"not recorded / {rto_hours}h"
+    if test.get("rto_met") is None:
+        return f"{duration} min, no RTO"
+    return f"{duration} min / {rto_hours}h, {'met' if test['rto_met'] else 'missed'}"

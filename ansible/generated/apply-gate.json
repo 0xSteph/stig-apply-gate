@@ -60,7 +60,7 @@
       "tag": "smb1",
       "action": "refuse",
       "label": "Stopped",
-      "reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days.",
+      "reason": "This change restarts a service or removes a feature, and the backup for this host is outside policy. Last good backup is 61 hours old against an RPO of 24 hours. Last restore test was 118 days ago. Policy is 90 days. The newest restore test (2026-06-01) took 10 hours 10 minutes. RTO is 8 hours.",
       "probe": null,
       "bundle": [],
       "as_of": "2026-09-27"
