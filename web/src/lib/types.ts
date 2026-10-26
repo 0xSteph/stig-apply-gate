@@ -84,6 +84,33 @@ export type Backup = {
   reasons: string[];
 };
 
+export type ControlFinding = {
+  slug: string;
+  host: string;
+  host_short: string;
+  control: string;
+  title: string;
+  cat: string;
+  clock: Clock;
+  due: string | null;
+  mapped_by: "reported" | "same_cci" | "no_cci" | "no_control" | string;
+};
+
+export type ControlRow = {
+  control: string;
+  family: string;
+  ccis: string[];
+  findings: ControlFinding[];
+  open: number;
+  overdue: number;
+  due_soon: number;
+  excepted: number;
+  closed: number;
+  worst_clock: Clock;
+  open_all_excepted: boolean;
+  earliest_due: string | null;
+};
+
 export type Ledger = {
   tool: string;
   version: string;
@@ -152,4 +179,5 @@ export type Ledger = {
     closed_this_period: number;
     by_cat: Record<string, { open: number; overdue: number }>;
   };
+  controls: ControlRow[];
 };

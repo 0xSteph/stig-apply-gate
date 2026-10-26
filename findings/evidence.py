@@ -12,6 +12,13 @@ def write_evidence(ledger: dict, out: Path) -> None:
     _write_findings_csv(out / "findings.csv", ledger["findings"])
     _write_poam(out / "poam.csv", ledger["findings"])
     _write_overdue(out / "overdue.csv", ledger["findings"])
+    controls = ledger.get("controls")
+    if controls is None:
+        from findings.ledger import build_controls
+
+        controls = build_controls(ledger["findings"])
+    _write_controls_csv(out / "controls.csv", controls)
+    (out / "controls.md").write_text(_controls_md(controls), encoding="utf-8")
     (out / "brief.md").write_text(_brief_md(ledger), encoding="utf-8")
     (out / "drift.md").write_text(_drift_md(ledger), encoding="utf-8")
     (out / "exceptions.md").write_text(_exceptions_md(ledger), encoding="utf-8")
@@ -183,6 +190,81 @@ def _write_poam(path: Path, findings: list[dict]) -> None:
 
 def _write_overdue(path: Path, findings: list[dict]) -> None:
     _write_findings_csv(path, [item for item in findings if item["clock"] == "overdue"])
+
+
+CONTROL_FIELDS = [
+    "control",
+    "family",
+    "ccis",
+    "worst_clock",
+    "open",
+    "overdue",
+    "due_soon",
+    "excepted",
+    "closed",
+    "open_all_excepted",
+    "earliest_due",
+    "findings",
+]
+
+
+def _write_controls_csv(path: Path, controls: list[dict]) -> None:
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=CONTROL_FIELDS)
+        writer.writeheader()
+        for row in controls:
+            writer.writerow(
+                {
+                    **{name: row[name] for name in CONTROL_FIELDS},
+                    "ccis": " ".join(row["ccis"]),
+                    "open_all_excepted": "yes" if row["open_all_excepted"] else "no",
+                    "earliest_due": row["earliest_due"] or "",
+                    "findings": ";".join(item["slug"] for item in row["findings"]),
+                }
+            )
+
+
+def _controls_md(controls: list[dict]) -> str:
+    lines = [
+        "# Controls",
+        "",
+        "The NIST SP 800-53 controls behind the CCIs the scanners reported. "
+        "A finding with no CCI, or with a CCI no scanner tied to a control, is listed under unmapped.",
+        "",
+    ]
+    family = None
+    for row in controls:
+        if row["family"] != family:
+            family = row["family"]
+            members = [item for item in controls if item["family"] == family]
+            open_count = sum(item["open"] for item in members)
+            overdue = sum(item["overdue"] for item in members)
+            lines.append(f"## {family}")
+            lines.append("")
+            noun = "control" if len(members) == 1 else "controls"
+            lines.append(f"{len(members)} {noun}. {open_count} open, {overdue} overdue.")
+            lines.append("")
+        ccis = ", ".join(row["ccis"]) or "no CCI"
+        lines.append(f"### {row['control']} — {row['worst_clock']}")
+        lines.append("")
+        summary = (
+            f"{ccis}. {row['open']} open, {row['overdue']} overdue, {row['due_soon']} due soon, "
+            f"{row['excepted']} excepted, {row['closed']} closed."
+        )
+        if row["earliest_due"]:
+            summary += f" Earliest due {row['earliest_due']}."
+        if row["open_all_excepted"]:
+            summary += " Every open finding is under an approved exception."
+        lines.append(summary)
+        lines.append("")
+        for item in row["findings"]:
+            due = f", due {item['due']}" if item["due"] and item["clock"] != "closed" else ""
+            lines.append(f"- {item['control']} on {item['host']} — CAT {item['cat']} — {item['clock']}{due}")
+        lines.append("")
+    if not controls:
+        lines.append("No findings.")
+        lines.append("")
+    return "\n".join(lines)
 
 
 def _brief_md(ledger: dict) -> str:

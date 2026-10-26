@@ -2548,6 +2548,375 @@
       }
     }
   },
+  "controls": [
+    {
+      "control": "AC-2",
+      "family": "AC",
+      "ccis": [
+        "CCI-000015"
+      ],
+      "findings": [
+        {
+          "slug": "esxi01--ESXI-80-000114",
+          "host": "esxi01.lab.local",
+          "host_short": "esxi01",
+          "control": "ESXI-80-000114",
+          "title": "ESXi must forward logs to a site syslog collector.",
+          "cat": "II",
+          "clock": "due_soon",
+          "due": "2026-10-13",
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 1,
+      "overdue": 0,
+      "due_soon": 1,
+      "excepted": 0,
+      "closed": 0,
+      "worst_clock": "due_soon",
+      "open_all_excepted": false,
+      "earliest_due": "2026-10-13"
+    },
+    {
+      "control": "AC-10",
+      "family": "AC",
+      "ccis": [
+        "CCI-000054"
+      ],
+      "findings": [
+        {
+          "slug": "esxi01--ESXI-80-000008",
+          "host": "esxi01.lab.local",
+          "host_short": "esxi01",
+          "control": "ESXI-80-000008",
+          "title": "ESXi lockdown mode must be enabled.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 0,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 1,
+      "worst_clock": "closed",
+      "open_all_excepted": false,
+      "earliest_due": null
+    },
+    {
+      "control": "AU-12",
+      "family": "AU",
+      "ccis": [
+        "CCI-000169"
+      ],
+      "findings": [
+        {
+          "slug": "rhel-mission01--RHEL-08-030180",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "RHEL-08-030180",
+          "title": "The audit package must be installed.",
+          "cat": "II",
+          "clock": "on_track",
+          "due": "2026-12-19",
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-repo01--RHEL-08-030180",
+          "host": "rhel-repo01.lab.local",
+          "host_short": "rhel-repo01",
+          "control": "RHEL-08-030180",
+          "title": "The audit package must be installed.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 1,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 1,
+      "worst_clock": "on_track",
+      "open_all_excepted": false,
+      "earliest_due": "2026-12-19"
+    },
+    {
+      "control": "CM-5",
+      "family": "CM",
+      "ccis": [
+        "CCI-001749"
+      ],
+      "findings": [
+        {
+          "slug": "rhel-repo01--RHEL-08-010370",
+          "host": "rhel-repo01.lab.local",
+          "host_short": "rhel-repo01",
+          "control": "RHEL-08-010370",
+          "title": "Repository packages must be GPG-checked before they are installed.",
+          "cat": "I",
+          "clock": "overdue",
+          "due": "2026-08-14",
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-mission01--RHEL-08-010371",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "RHEL-08-010371",
+          "title": "Local packages must be GPG-checked before they are installed.",
+          "cat": "I",
+          "clock": "overdue",
+          "due": "2026-09-19",
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-repo01--RHEL-08-010371",
+          "host": "rhel-repo01.lab.local",
+          "host_short": "rhel-repo01",
+          "control": "RHEL-08-010371",
+          "title": "Local packages must be GPG-checked before they are installed.",
+          "cat": "I",
+          "clock": "overdue",
+          "due": "2026-09-19",
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-mission01--RHEL-08-010370",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "RHEL-08-010370",
+          "title": "Repository packages must be GPG-checked before they are installed.",
+          "cat": "I",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 3,
+      "overdue": 3,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 1,
+      "worst_clock": "overdue",
+      "open_all_excepted": false,
+      "earliest_due": "2026-08-14"
+    },
+    {
+      "control": "CM-7",
+      "family": "CM",
+      "ccis": [
+        "CCI-000381"
+      ],
+      "findings": [
+        {
+          "slug": "wsus01--WN22-00-000380",
+          "host": "wsus01.lab.local",
+          "host_short": "wsus01",
+          "control": "WN22-00-000380",
+          "title": "The SMBv1 feature must not be installed.",
+          "cat": "II",
+          "clock": "overdue",
+          "due": "2026-09-01",
+          "mapped_by": "same_cci"
+        },
+        {
+          "slug": "esxi01--ESXI-80-000193",
+          "host": "esxi01.lab.local",
+          "host_short": "esxi01",
+          "control": "ESXI-80-000193",
+          "title": "The ESXi SSH service must be stopped.",
+          "cat": "II",
+          "clock": "excepted",
+          "due": "2026-10-15",
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "ad01--WN22-00-000380",
+          "host": "ad01.lab.local",
+          "host_short": "ad01",
+          "control": "WN22-00-000380",
+          "title": "The SMBv1 feature must not be installed.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "same_cci"
+        }
+      ],
+      "open": 2,
+      "overdue": 1,
+      "due_soon": 0,
+      "excepted": 1,
+      "closed": 1,
+      "worst_clock": "overdue",
+      "open_all_excepted": false,
+      "earliest_due": "2026-09-01"
+    },
+    {
+      "control": "IA-2",
+      "family": "IA",
+      "ccis": [
+        "CCI-000770"
+      ],
+      "findings": [
+        {
+          "slug": "rhel-mission01--RHEL-08-010550",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "RHEL-08-010550",
+          "title": "Direct SSH logons as root must be disabled.",
+          "cat": "II",
+          "clock": "on_track",
+          "due": "2026-11-18",
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-repo01--RHEL-08-010550",
+          "host": "rhel-repo01.lab.local",
+          "host_short": "rhel-repo01",
+          "control": "RHEL-08-010550",
+          "title": "Direct SSH logons as root must be disabled.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 1,
+      "overdue": 0,
+      "due_soon": 0,
+      "excepted": 0,
+      "closed": 1,
+      "worst_clock": "on_track",
+      "open_all_excepted": false,
+      "earliest_due": "2026-11-18"
+    },
+    {
+      "control": "IA-5",
+      "family": "IA",
+      "ccis": [
+        "CCI-000205"
+      ],
+      "findings": [
+        {
+          "slug": "rhel-repo01--RHEL-08-020230",
+          "host": "rhel-repo01.lab.local",
+          "host_short": "rhel-repo01",
+          "control": "RHEL-08-020230",
+          "title": "Passwords must be at least 15 characters.",
+          "cat": "II",
+          "clock": "due_soon",
+          "due": "2026-10-13",
+          "mapped_by": "reported"
+        },
+        {
+          "slug": "rhel-mission01--RHEL-08-020230",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "RHEL-08-020230",
+          "title": "Passwords must be at least 15 characters.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "reported"
+        }
+      ],
+      "open": 1,
+      "overdue": 0,
+      "due_soon": 1,
+      "excepted": 0,
+      "closed": 1,
+      "worst_clock": "due_soon",
+      "open_all_excepted": false,
+      "earliest_due": "2026-10-13"
+    },
+    {
+      "control": "unmapped",
+      "family": "unmapped",
+      "ccis": [
+        "CCI-004923"
+      ],
+      "findings": [
+        {
+          "slug": "rhel-mission01--CVE-2024-6387",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "CVE-2024-6387",
+          "title": "OpenSSH signal-handler race during authentication.",
+          "cat": "I",
+          "clock": "due_soon",
+          "due": "2026-10-05",
+          "mapped_by": "no_cci"
+        },
+        {
+          "slug": "wsus01--WN22-AC-000070",
+          "host": "wsus01.lab.local",
+          "host_short": "wsus01",
+          "control": "WN22-AC-000070",
+          "title": "Minimum password length must be 14 characters.",
+          "cat": "II",
+          "clock": "due_soon",
+          "due": "2026-10-13",
+          "mapped_by": "no_cci"
+        },
+        {
+          "slug": "ad01--WN22-DC-000060",
+          "host": "ad01.lab.local",
+          "host_short": "ad01",
+          "control": "WN22-DC-000060",
+          "title": "Domain controller clock skew must stay within five minutes.",
+          "cat": "II",
+          "clock": "on_track",
+          "due": "2026-11-18",
+          "mapped_by": "no_cci"
+        },
+        {
+          "slug": "esxi01--ESXI-80-000124",
+          "host": "esxi01.lab.local",
+          "host_short": "esxi01",
+          "control": "ESXI-80-000124",
+          "title": "ESXi must synchronize time from an authoritative source.",
+          "cat": "II",
+          "clock": "on_track",
+          "due": "2026-11-18",
+          "mapped_by": "no_control"
+        },
+        {
+          "slug": "rhel-mission01--CVE-2023-48795",
+          "host": "rhel-mission01.lab.local",
+          "host_short": "rhel-mission01",
+          "control": "CVE-2023-48795",
+          "title": "SSH prefix truncation can weaken the handshake.",
+          "cat": "II",
+          "clock": "on_track",
+          "due": "2026-11-18",
+          "mapped_by": "no_cci"
+        },
+        {
+          "slug": "ad01--WN22-AC-000070",
+          "host": "ad01.lab.local",
+          "host_short": "ad01",
+          "control": "WN22-AC-000070",
+          "title": "Minimum password length must be 14 characters.",
+          "cat": "II",
+          "clock": "closed",
+          "due": null,
+          "mapped_by": "no_cci"
+        }
+      ],
+      "open": 5,
+      "overdue": 0,
+      "due_soon": 2,
+      "excepted": 0,
+      "closed": 1,
+      "worst_clock": "due_soon",
+      "open_all_excepted": false,
+      "earliest_due": "2026-10-05"
+    }
+  ],
   "sources": [
     {
       "file": "fixtures/lab/scans/ad01_2026-07-15.ckl",
