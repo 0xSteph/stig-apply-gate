@@ -92,6 +92,8 @@ def parse_scan(path: Path, observed_on: date | None = None) -> list[Observation]
         if local_name(root.tag).upper() == "CHECKLIST" or suffix == ".ckl":
             return parse_ckl(path, observed_on=observed_on)
         return parse_xccdf(path, observed_on=observed_on)
+    if suffix == ".cklb":
+        return parse_cklb(path, observed_on=observed_on)
     if suffix == ".csv":
         return parse_acas(path, observed_on=observed_on)
     if suffix == ".json":
@@ -280,6 +282,97 @@ def parse_ckl(path: Path, observed_on: date | None = None) -> list[Observation]:
     return observations
 
 
+_SV_RULE = re.compile(r"^SV-\d+r\d+$")
+
+
+def cklb_host(document: dict) -> str:
+    """Host name for a STIG Viewer 3 checklist, chosen the way parse_ckl chooses it.
+
+    parse_ckl prefers HOST_FQDN over HOST_NAME, and STIG Viewer 3 copies those two
+    fields into fqdn and host_name. Using the same order keeps a CKL and a CKLB for
+    one asset on one host key, so their rows cluster into one finding.
+    """
+    target = document.get("target_data") or {}
+    if not isinstance(target, dict):
+        return ""
+    fqdn = str(target.get("fqdn") or "").strip()
+    name = str(target.get("host_name") or "").strip()
+    return fqdn or name
+
+
+def cklb_rule_id(rule: dict) -> str | None:
+    """rule_id as the CKL writes it. Some CKLB writers drop the _rule suffix."""
+    value = str(rule.get("rule_id") or rule.get("rule_id_src") or "").strip()
+    if not value:
+        return None
+    if _SV_RULE.match(value):
+        value = f"{value}_rule"
+    return value
+
+
+def read_cklb(path: Path) -> dict:
+    import json
+
+    try:
+        document = json.loads(path.read_text(encoding="utf-8-sig"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{path} is not valid JSON: {exc}") from exc
+    if not isinstance(document, dict) or not isinstance(document.get("stigs"), list):
+        raise ValueError(f"{path} is not a STIG Viewer 3 checklist. Expected a top-level stigs list.")
+    return document
+
+
+def parse_cklb(path: Path, observed_on: date | None = None) -> list[Observation]:
+    document = read_cklb(path)
+    host = cklb_host(document)
+    if not host:
+        raise ValueError(f"{path} checklist has no host name in target_data.host_name or target_data.fqdn")
+    scanned = observed_on or date_from_filename(path)
+    if scanned is None:
+        raise ValueError(f"{path} needs a YYYY-MM-DD in the filename or an observed date")
+
+    observations: list[Observation] = []
+    for stig in document["stigs"]:
+        if not isinstance(stig, dict):
+            continue
+        benchmark = str(stig.get("stig_name") or stig.get("display_name") or "").strip()
+        for rule in stig.get("rules") or []:
+            if not isinstance(rule, dict):
+                continue
+            overrides = rule.get("overrides") or {}
+            override_block = overrides.get("severity") if isinstance(overrides, dict) else None
+            if not isinstance(override_block, dict):
+                override_block = {}
+            override = str(override_block.get("severity") or "").strip()
+            justification = str(override_block.get("reason") or "").strip()
+            details = str(rule.get("finding_details") or "").strip()
+            rule_ver = str(rule.get("rule_version") or "").strip() or None
+            vuln_num = str(rule.get("group_id") or rule.get("group_id_src") or "").strip() or None
+            observations.append(
+                Observation(
+                    host=host,
+                    observed_at=scanned,
+                    source="cklb",
+                    source_file=str(path),
+                    benchmark=benchmark,
+                    rule_ver=rule_ver,
+                    vuln_num=vuln_num,
+                    rule_id=cklb_rule_id(rule),
+                    title=str(rule.get("rule_title") or "").strip() or rule_ver or "",
+                    severity=normalize_severity(_text(rule.get("severity"))),
+                    severity_override=normalize_severity(override),
+                    cci=[str(item).strip() for item in rule.get("ccis") or [] if str(item).strip()],
+                    result=normalize_result(_text(rule.get("status")), source=path.name),
+                    comments=str(rule.get("comments") or "").strip(),
+                    detail=" ".join(part for part in (details, justification) if part),
+                    platform="stig",
+                )
+            )
+    if not observations:
+        raise ValueError(f"{path} parsed as a STIG Viewer 3 checklist but contained no rules.")
+    return observations
+
+
 def parse_acas(path: Path, observed_on: date | None = None) -> list[Observation]:
     scanned = observed_on or date_from_filename(path)
     if scanned is None:
@@ -363,14 +456,14 @@ def load_scans(path: Path) -> tuple[list[Observation], list[str]]:
     observations: list[Observation] = []
     files = [path] if path.is_file() else sorted(item for item in path.rglob("*") if item.is_file())
     skip_names = {"hosts.json", "exceptions.json", "backups.json", "services.json", "site.json", "milestones.json"}
-    known = {".xml", ".ckl", ".csv", ".json"}
+    known = {".xml", ".ckl", ".cklb", ".csv", ".json"}
     for item in files:
         if item.name in skip_names:
             continue
         suffix = item.suffix.lower()
         if suffix not in known:
             problems.append(
-                f"{item}: not a scan export. Readable files are .xml (XCCDF), .ckl (STIG Viewer), "
+                f"{item}: not a scan export. Readable files are .xml (XCCDF), .ckl or .cklb (STIG Viewer), "
                 ".csv (ACAS or Nessus), and .json (ESXi snapshot). Export .nessus results to CSV first."
             )
             continue
@@ -387,7 +480,7 @@ def load_scans(path: Path) -> tuple[list[Observation], list[str]]:
     if not readable:
         problems.append(
             f"{path}: no scan exports were found. "
-            "Expected .xml (XCCDF), .ckl (STIG Viewer), .csv (ACAS or Nessus), or .json (ESXi snapshot)."
+            "Expected .xml (XCCDF), .ckl or .cklb (STIG Viewer), .csv (ACAS or Nessus), or .json (ESXi snapshot)."
         )
     return observations, problems
 
@@ -399,6 +492,12 @@ def _day(value: str) -> date | None:
         return date.fromisoformat(value[:10])
     except ValueError:
         return None
+
+
+def _text(value) -> str | None:
+    if value is None:
+        return None
+    return str(value)
 
 
 def _first(attrs: dict[str, list[str]], key: str) -> str | None:

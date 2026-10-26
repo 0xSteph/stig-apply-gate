@@ -26,7 +26,7 @@ def main(argv: list[str] | None = None) -> int:
     demo.add_argument("--duties", default="fixtures/lab/duties.json")
 
     ingest = sub.add_parser("ingest", help="Build a ledger from exports you already have.")
-    ingest.add_argument("--scan", action="append", required=True, help="File or directory of XCCDF, CKL, ACAS CSV, or vSphere snapshots.")
+    ingest.add_argument("--scan", action="append", required=True, help="File or directory of XCCDF, CKL, CKLB, ACAS CSV, or vSphere snapshots.")
     ingest.add_argument("--hosts", required=True)
     ingest.add_argument("--exceptions", required=True)
     ingest.add_argument("--backups", required=True)
@@ -43,6 +43,14 @@ def main(argv: list[str] | None = None) -> int:
     evidence = sub.add_parser("evidence", help="Write an evidence pack from a ledger JSON file.")
     evidence.add_argument("--ledger", required=True)
     evidence.add_argument("--out", required=True)
+
+    annotate = sub.add_parser(
+        "annotate",
+        help="Copy a CKL or CKLB checklist with register notes in finding details and comments. STATUS is not changed.",
+    )
+    annotate.add_argument("--ledger", required=True)
+    annotate.add_argument("--checklist", required=True, help="A .ckl (STIG Viewer 2) or .cklb (STIG Viewer 3) file.")
+    annotate.add_argument("--out", required=True, help="Where to write the copy. Must not be the input checklist.")
 
     rehearse = sub.add_parser(
         "rehearse",
@@ -67,9 +75,28 @@ def main(argv: list[str] | None = None) -> int:
         ledger = json.loads(Path(args.ledger).read_text(encoding="utf-8"))
         write_evidence(ledger, Path(args.out))
         return 0
+    if args.command == "annotate":
+        return _annotate(args)
     if args.command == "rehearse":
         return _rehearse(args)
     return 1
+
+
+def _annotate(args: argparse.Namespace) -> int:
+    from findings.annotate import annotate_checklist
+
+    try:
+        ledger = _load(Path(args.ledger))
+        summary = annotate_checklist(ledger, Path(args.checklist), Path(args.out))
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"No checklist was written. {exc}", file=sys.stderr)
+        return 2
+    hosts = ", ".join(summary["hosts"])
+    print(f"annotated {summary['matched']} of {summary['rules']} rules for {hosts}")
+    if not summary["matched"]:
+        print("No ledger finding matched this checklist. Check that the host name matches the ledger.", file=sys.stderr)
+    print(f"wrote {summary['out']}")
+    return 0
 
 
 def _demo(args: argparse.Namespace) -> int:
