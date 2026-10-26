@@ -12,3 +12,7 @@ ansible/generated/*.sig
 
 web/node_modules/
 web/.next/
+
+# Working notes that stay local
+docs/resume-notes.md
+docs/roadmap.md
