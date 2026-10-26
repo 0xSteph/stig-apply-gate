@@ -15,6 +15,12 @@
 
   -Apply and -Revert together are refused.
 
+  -Snapshot <path> writes a windows-posture JSON file for the findings register
+  and changes nothing: host, observed_at, domain controller role, w32tm time
+  source and type, SMBv1 state, password policy source, pending reboot, and the
+  WSUS target group and server. A probe that cannot run records null for its
+  field and a line in probe_errors. -Snapshot with -Apply or -Revert is refused.
+
 .PARAMETER Apply
   Uninstall FS-SMB1 after saving the current state. Ignored for every other control.
 
@@ -23,19 +29,182 @@
 
 .PARAMETER Reboot
   Allow the SMBv1 change to restart the computer.
+
+.PARAMETER Snapshot
+  Write a read-only posture snapshot to this path and exit. Nothing is changed.
 #>
 [CmdletBinding()]
 param(
     [switch]$Apply,
     [switch]$Revert,
     [switch]$Reboot,
-    [string]$Gate = ""
+    [string]$Gate = "",
+    [string]$Snapshot = ""
 )
 
 $ErrorActionPreference = "Stop"
 
 if ($Apply -and $Revert) {
     throw "Use -Apply or -Revert, not both."
+}
+
+if ($Snapshot -and ($Apply -or $Revert)) {
+    throw "-Snapshot only reads. Run it without -Apply or -Revert."
+}
+
+function Get-PostureSnapshot {
+    $probeErrors = New-Object System.Collections.Generic.List[string]
+    $data = [ordered]@{
+        kind                   = "windows-posture"
+        host                   = $null
+        observed_at            = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+        is_domain_controller   = $null
+        time_source            = $null
+        time_type              = $null
+        smb1_installed         = $null
+        smb1_state             = $null
+        password_policy_source = $null
+        pending_reboot         = $null
+        pending_reboot_reasons = @()
+        wsus_target_group      = $null
+        wsus_server            = $null
+        probe_errors           = @()
+    }
+
+    try {
+        $data.host = [System.Net.Dns]::GetHostByName($env:COMPUTERNAME).HostName
+    } catch {
+        $probeErrors.Add("host: $($_.Exception.Message.Trim())")
+        $data.host = $env:COMPUTERNAME
+    }
+
+    $partOfDomain = $null
+    try {
+        $system = Get-CimInstance -ClassName Win32_ComputerSystem
+        $partOfDomain = [bool]$system.PartOfDomain
+        # DomainRole 4 is a backup domain controller, 5 the primary.
+        $data.is_domain_controller = ([int]$system.DomainRole -ge 4)
+    } catch {
+        $probeErrors.Add("is_domain_controller: $($_.Exception.Message.Trim())")
+    }
+
+    try {
+        $output = & w32tm.exe /query /source 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "w32tm /query /source exited $LASTEXITCODE. $($output.Trim())" }
+        $data.time_source = $output.Trim()
+    } catch {
+        $probeErrors.Add("time_source: $($_.Exception.Message.Trim())")
+    }
+
+    try {
+        $output = & w32tm.exe /query /configuration 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "w32tm /query /configuration exited $LASTEXITCODE. $($output.Trim())" }
+        if ($output -match "(?m)^\s*Type:\s*(.+?)\s*$") {
+            $data.time_type = $Matches[1]
+        }
+    } catch {
+        $probeErrors.Add("time_type: $($_.Exception.Message.Trim())")
+    }
+
+    try {
+        if (Get-Command Get-WindowsFeature -ErrorAction SilentlyContinue) {
+            $state = [string](Get-WindowsFeature -Name FS-SMB1).InstallState
+        } elseif (Get-Command Get-WindowsOptionalFeature -ErrorAction SilentlyContinue) {
+            $state = [string](Get-WindowsOptionalFeature -Online -FeatureName SMB1Protocol).State
+        } else {
+            throw "Neither Get-WindowsFeature nor Get-WindowsOptionalFeature is available."
+        }
+        $data.smb1_state = $state
+        if ($state -in @("Installed", "InstallPending", "Enabled", "EnablePending")) {
+            $data.smb1_installed = $true
+        } elseif ($state -in @("Available", "Removed", "UninstallPending", "Disabled", "DisablePending", "DisabledWithPayloadRemoved")) {
+            $data.smb1_installed = $false
+        } else {
+            throw "FS-SMB1 state '$state' was not recognized."
+        }
+    } catch {
+        $probeErrors.Add("smb1_installed: $($_.Exception.Message.Trim())")
+    }
+
+    try {
+        if ($partOfDomain -eq $false) {
+            # A workgroup host has no domain GPO to apply.
+            $data.password_policy_source = "local"
+        } else {
+            $output = & gpresult.exe /r /scope computer 2>&1
+            if ($LASTEXITCODE -ne 0) { throw "gpresult /r /scope computer exited $LASTEXITCODE. $(($output | Out-String).Trim())" }
+            $applied = @()
+            $inList = $false
+            foreach ($line in $output) {
+                $text = [string]$line
+                if ($text -match "^\s*Applied Group Policy Objects\s*$") { $inList = $true; continue }
+                if (-not $inList) { continue }
+                if ($text -match "^\s*-+\s*$") { continue }
+                if (-not $text.Trim()) {
+                    if ($applied.Count -gt 0) { break }
+                    continue
+                }
+                $applied += $text.Trim()
+            }
+            $domainGpos = @($applied | Where-Object { $_ -ne "Local Group Policy" })
+            if ($domainGpos -contains "Default Domain Policy") {
+                $data.password_policy_source = "Default Domain Policy"
+            } elseif ($domainGpos.Count -gt 0) {
+                $data.password_policy_source = $domainGpos[0]
+            } else {
+                $data.password_policy_source = "local"
+            }
+        }
+    } catch {
+        $probeErrors.Add("password_policy_source: $($_.Exception.Message.Trim())")
+    }
+
+    try {
+        $reasons = @()
+        if (Test-Path -LiteralPath "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending") {
+            $reasons += "Component Based Servicing RebootPending"
+        }
+        if (Test-Path -LiteralPath "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired") {
+            $reasons += "Windows Update RebootRequired"
+        }
+        $session = Get-ItemProperty -LiteralPath "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager"
+        if ($session.PendingFileRenameOperations) {
+            $reasons += "PendingFileRenameOperations"
+        }
+        $data.pending_reboot = ($reasons.Count -gt 0)
+        $data.pending_reboot_reasons = $reasons
+    } catch {
+        $probeErrors.Add("pending_reboot: $($_.Exception.Message.Trim())")
+    }
+
+    try {
+        $policyKey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate"
+        if (Test-Path -LiteralPath $policyKey) {
+            $policy = Get-ItemProperty -LiteralPath $policyKey
+            if ($null -ne $policy.TargetGroup) { $data.wsus_target_group = [string]$policy.TargetGroup }
+            if ($null -ne $policy.WUServer) { $data.wsus_server = [string]$policy.WUServer }
+        }
+    } catch {
+        $probeErrors.Add("wsus: $($_.Exception.Message.Trim())")
+    }
+
+    $data.probe_errors = @($probeErrors)
+    [pscustomobject]$data
+}
+
+if ($Snapshot) {
+    $target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Snapshot)
+    $parent = Split-Path -Parent $target
+    if ($parent -and -not (Test-Path -LiteralPath $parent)) {
+        throw "Snapshot folder $parent does not exist. Nothing was written."
+    }
+    $posture = Get-PostureSnapshot
+    $json = $posture | ConvertTo-Json -Depth 4
+    # UTF-8 without a byte order mark, so any JSON reader takes it as written.
+    [System.IO.File]::WriteAllText($target, $json, (New-Object System.Text.UTF8Encoding $false))
+    Write-Output "Wrote $target. Nothing on this host was changed."
+    foreach ($problem in $posture.probe_errors) { Write-Warning $problem }
+    exit 0
 }
 
 function Assert-ApplyAllowed {

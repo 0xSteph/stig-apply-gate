@@ -98,6 +98,10 @@ def parse_scan(path: Path, observed_on: date | None = None) -> list[Observation]
     if suffix == ".csv":
         return parse_acas(path, observed_on=observed_on)
     if suffix == ".json":
+        from findings.windows import is_windows_snapshot, parse_windows_export
+
+        if is_windows_snapshot(path):
+            return parse_windows_export(path, observed_on=observed_on)
         return parse_vsphere_export(path, observed_on=observed_on)
     raise ValueError(f"Unsupported scan file: {path}")
 

@@ -13,6 +13,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 from findings.vsphere import ESXI_CHECKS
+from findings.windows import WINDOWS_CHECKS
 
 NS = "http://checklists.nist.gov/xccdf/1.2"
 
@@ -59,32 +60,7 @@ RHEL_RULES = {
     },
 }
 
-WINDOWS_RULES = {
-    "WN22-00-000380": {
-        "vuln_num": "V-254275",
-        "rule_id": "SV-254275r958478_rule",
-        "severity": "medium",
-        "cci": ["CCI-000381"],
-        "nist": [],
-        "title": "The SMBv1 feature must not be installed.",
-    },
-    "WN22-AC-000070": {
-        "vuln_num": "",
-        "rule_id": "",
-        "severity": "medium",
-        "cci": [],
-        "nist": ["IA-5"],
-        "title": "Minimum password length must be 14 characters.",
-    },
-    "WN22-DC-000060": {
-        "vuln_num": "",
-        "rule_id": "",
-        "severity": "medium",
-        "cci": [],
-        "nist": [],
-        "title": "Domain controller clock skew must stay within five minutes.",
-    },
-}
+WINDOWS_RULES = WINDOWS_CHECKS
 
 # host, date, rule, result, comment
 RHEL_RESULTS = [
