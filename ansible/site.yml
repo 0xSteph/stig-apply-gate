@@ -6,11 +6,31 @@
 # This inventory is the lab. python -m findings rehearse tries a change on a copy and does not write the gate file this play reads.
 # Put the saved files back (does not restart sshd):
 #   ansible-playbook -i ansible/inventory/lab.ini ansible/revert.yml --limit rhel-repo01.lab.local
+#
+# The gate file is signed. Before the role reads generated/apply-gate.json, the controller runs
+#   python -m findings verify-gate --gate ansible/generated/apply-gate.json \
+#     --allowed-signers ansible/allowed_signers --identity findings-register \
+#     --ledger web/src/data/ledger.json
+# and the play stops unless the OpenSSH signature in apply-gate.json.sig verifies and the gate's
+# as_of matches the ledger's generated_for. A gate edited by hand, an unsigned gate, or an older
+# signed gate copied back over a newer ledger all stop here.
+# Sign the gate on the controller after building it:
+#   python -m findings sign --gate ansible/generated/apply-gate.json --key ~/.ssh/findings-gate
+# or pass --sign-key to `findings demo` or `findings ingest`. Copy allowed_signers.example to
+# allowed_signers and put the public half of that key in it. Both allowed_signers and *.sig are
+# gitignored. Keep the private key off this repository.
+# Overrides: -e findings_ledger_file=<ledger> for a ledger written somewhere else, or
+# -e findings_ledger_file= to skip the date check. -e findings_python=<python 3.11+> when the
+# Python that runs Ansible is older than 3.11.
 - name: RHEL controls marked safe to automate
   hosts: rhel
   become: true
   vars:
     findings_gate_file: "{{ playbook_dir }}/generated/apply-gate.json"
+    findings_allowed_signers: "{{ playbook_dir }}/allowed_signers"
+    findings_signer_identity: findings-register
+    findings_ledger_file: "{{ playbook_dir }}/../web/src/data/ledger.json"
+    findings_python: "{{ ansible_playbook_python }}"
   pre_tasks:
     - name: Stay inside the integration lab
       ansible.builtin.assert:
@@ -21,6 +41,43 @@
           {{ inventory_hostname }} is outside the integration lab.
           Prove the change here before a maintenance window.
           This play does not change operations hosts.
+      tags: [always]
+
+    - name: Verify the signature on the apply gate
+      ansible.builtin.command:
+        argv: >-
+          {{ [findings_python, '-m', 'findings', 'verify-gate',
+              '--gate', findings_gate_file,
+              '--allowed-signers', findings_allowed_signers,
+              '--identity', findings_signer_identity]
+             + (['--ledger', findings_ledger_file] if (findings_ledger_file | default('') | length > 0) else []) }}
+        chdir: "{{ playbook_dir }}/.."
+      delegate_to: localhost
+      run_once: true
+      become: false
+      check_mode: false
+      changed_when: false
+      failed_when: false
+      register: findings_gate_check
+      tags: [always]
+
+    # run_once registers the result on every host in the play, and a failed run_once task
+    # fails every host, so no host reaches the role with an unverified gate.
+    - name: Stop unless the gate signature verified
+      ansible.builtin.assert:
+        that:
+          - (findings_gate_check.rc | default(1)) == 0
+        fail_msg: >-
+          The apply gate was not verified, so this play will not read it.
+          {{ findings_gate_check.stderr | default(findings_gate_check.msg | default('')) }}
+          To sign it on the controller, run
+          python -m findings sign --gate ansible/generated/apply-gate.json --key <private key>
+          and list the public key in ansible/allowed_signers as
+          findings-register ssh-ed25519 AAAA... (see ansible/allowed_signers.example).
+        success_msg: "{{ findings_gate_check.stdout | default('verified') }}"
+      delegate_to: localhost
+      run_once: true
+      become: false
       tags: [always]
   roles:
     - rhel_baseline

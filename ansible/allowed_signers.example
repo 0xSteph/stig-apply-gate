@@ -1,0 +1,8 @@
+# Public keys allowed to sign ansible/generated/apply-gate.json.
+# Copy this file to ansible/allowed_signers (gitignored) and replace the line below with the
+# contents of your signing key's .pub file, prefixed by the identity the play checks.
+# Format: <identity> <key type> <base64 public key>
+# The identity must match --identity on verify-gate and findings_signer_identity in site.yml.
+# `python -m findings sign` prints this line for the key it used.
+# The line below is a placeholder and will not verify anything.
+findings-register ssh-ed25519 AAAA...

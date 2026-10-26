@@ -10,6 +10,7 @@ from findings.evidence import write_evidence, write_remediation_plan
 from findings.ledger import build_ledger
 from findings.parsers import load_scans
 from findings.policy import load_policy, parse_day
+from findings.signing import DEFAULT_IDENTITY, GateSignatureError, public_key_line, sign_gate, verify_gate
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -24,6 +25,7 @@ def main(argv: list[str] | None = None) -> int:
     demo.add_argument("--plan", default="ansible/generated/lab-plan.yml")
     demo.add_argument("--gate", default="ansible/generated/apply-gate.json")
     demo.add_argument("--duties", default="fixtures/lab/duties.json")
+    _add_sign_options(demo)
 
     ingest = sub.add_parser("ingest", help="Build a ledger from exports you already have.")
     ingest.add_argument("--scan", action="append", required=True, help="File or directory of XCCDF, CKL, CKLB, ACAS CSV, or vSphere snapshots.")
@@ -39,6 +41,29 @@ def main(argv: list[str] | None = None) -> int:
     ingest.add_argument("--out", required=True)
     ingest.add_argument("--evidence", default="")
     ingest.add_argument("--gate", default="")
+    _add_sign_options(ingest)
+
+    sign = sub.add_parser("sign", help="Sign the apply gate with an OpenSSH key. Writes <gate>.sig.")
+    sign.add_argument("--gate", required=True)
+    sign.add_argument("--key", required=True, help="Private key file, for example an ed25519 key.")
+    sign.add_argument(
+        "--identity",
+        default=DEFAULT_IDENTITY,
+        help="Name to print for the allowed_signers line. The play checks this name.",
+    )
+
+    verify_gate = sub.add_parser(
+        "verify-gate",
+        help="Check the signature on the apply gate. Exits non-zero unless it verifies.",
+    )
+    verify_gate.add_argument("--gate", required=True)
+    verify_gate.add_argument("--allowed-signers", required=True)
+    verify_gate.add_argument("--identity", required=True)
+    verify_gate.add_argument(
+        "--ledger",
+        default="",
+        help="Ledger JSON. When given, the gate's as_of must equal the ledger's generated_for.",
+    )
 
     evidence = sub.add_parser("evidence", help="Write an evidence pack from a ledger JSON file.")
     evidence.add_argument("--ledger", required=True)
@@ -89,6 +114,10 @@ def main(argv: list[str] | None = None) -> int:
         return _rehearse(args)
     if args.command == "verify":
         return _verify(args)
+    if args.command == "sign":
+        return _sign(args)
+    if args.command == "verify-gate":
+        return _verify_gate(args)
     return 1
 
 
@@ -146,9 +175,83 @@ def _verify(args: argparse.Namespace) -> int:
     return 0
 
 
+def _add_sign_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--sign-key", default="", help="Private key. Signs the gate as it is written.")
+    parser.add_argument(
+        "--signer-identity",
+        default=DEFAULT_IDENTITY,
+        help="Name to print for the allowed_signers line.",
+    )
+
+
+def _sign_options_problem(args: argparse.Namespace) -> int:
+    if args.sign_key and not args.gate:
+        print("--sign-key needs --gate. Nothing was written.", file=sys.stderr)
+        return 2
+    return 0
+
+
+def _sign(args: argparse.Namespace) -> int:
+    try:
+        sig = sign_gate(Path(args.gate), Path(args.key))
+    except GateSignatureError as exc:
+        print(f"Not signed. {exc}", file=sys.stderr)
+        return 2
+    print(f"wrote {sig}")
+    line = public_key_line(Path(args.key), args.identity)
+    if line:
+        print(f"allowed_signers line: {line}")
+    return 0
+
+
+def _verify_gate(args: argparse.Namespace) -> int:
+    generated_for = None
+    if args.ledger:
+        try:
+            generated_for = _load(Path(args.ledger)).get("generated_for")
+        except (OSError, ValueError, AttributeError) as exc:
+            print(f"Gate not verified. Could not read the ledger {args.ledger}: {exc}", file=sys.stderr)
+            return 2
+        if not generated_for:
+            print(f"Gate not verified. {args.ledger} has no generated_for date.", file=sys.stderr)
+            return 2
+    try:
+        verify_gate(
+            Path(args.gate),
+            Path(args.allowed_signers),
+            args.identity,
+            generated_for=generated_for,
+        )
+    except GateSignatureError as exc:
+        print(f"Gate not verified. {exc}", file=sys.stderr)
+        return 2
+    suffix = f", as of {generated_for}" if generated_for else ""
+    print(f"verified {args.gate} for {args.identity}{suffix}")
+    return 0
+
+
+def _write_signed_gate(ledger: dict, args: argparse.Namespace) -> int:
+    gate_path = Path(args.gate)
+    _write_gate(ledger, gate_path)
+    if not args.sign_key:
+        return 0
+    try:
+        sig = sign_gate(gate_path, Path(args.sign_key))
+    except GateSignatureError as exc:
+        print(f"The gate was written but not signed, so the play will refuse it. {exc}", file=sys.stderr)
+        return 2
+    print(f"wrote {sig}")
+    line = public_key_line(Path(args.sign_key), args.signer_identity)
+    if line:
+        print(f"allowed_signers line: {line}")
+    return 0
+
+
 def _demo(args: argparse.Namespace) -> int:
     from findings.lab import write_lab_scans
 
+    if _sign_options_problem(args):
+        return 2
     scan_dir = Path(args.scans)
     write_lab_scans(scan_dir)
     ledger = _ledger_from_dir(
@@ -170,13 +273,15 @@ def _demo(args: argparse.Namespace) -> int:
         write_evidence(ledger, Path(args.evidence))
     if args.plan:
         write_remediation_plan(ledger, Path(args.plan))
-    if args.gate:
-        _write_gate(ledger, Path(args.gate))
     print(f"wrote {out}")
+    if args.gate:
+        return _write_signed_gate(ledger, args)
     return 0
 
 
 def _ingest(args: argparse.Namespace) -> int:
+    if _sign_options_problem(args):
+        return 2
     today = parse_day(args.today) if args.today else date.today()
     observations, problems = _read_scans([Path(raw) for raw in args.scan])
     if problems:
@@ -198,9 +303,9 @@ def _ingest(args: argparse.Namespace) -> int:
     out.write_text(json.dumps(ledger, indent=2) + "\n", encoding="utf-8")
     if args.evidence:
         write_evidence(ledger, Path(args.evidence))
-    if args.gate:
-        _write_gate(ledger, Path(args.gate))
     print(f"wrote {out}")
+    if args.gate:
+        return _write_signed_gate(ledger, args)
     return 0
 
 
